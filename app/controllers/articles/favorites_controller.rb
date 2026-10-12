@@ -4,7 +4,6 @@ class Articles::FavoritesController < ApplicationController
   def create
     Current.user.favorites.find_or_create_by!(article: @article)
     @article.reload
-    @favorited_ids = favorited_ids_among([ @article ])
 
     respond_to do |format|
       format.turbo_stream { render :update }
@@ -15,7 +14,6 @@ class Articles::FavoritesController < ApplicationController
   def destroy
     Current.user.favorites.find_by(article: @article)&.destroy
     @article.reload
-    @favorited_ids = favorited_ids_among([ @article ])
 
     respond_to do |format|
       format.turbo_stream { render :update }

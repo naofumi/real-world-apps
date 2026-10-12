@@ -9,14 +9,12 @@ class ArticlesController < ApplicationController
     articles = articles.tagged_with(params[:tag]) if params[:tag].present?
     @tag = params[:tag]
     @page = page_of(articles)
-    @favorited_ids = favorited_ids_among(@page.records)
     @tags = Tag.popular
   end
 
   def show
     @comments = @article.comments.oldest_first.includes(:user)
     @comment = @article.comments.new
-    @favorited_ids = favorited_ids_among([ @article ])
   end
 
   def new

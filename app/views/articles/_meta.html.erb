@@ -17,6 +17,6 @@
     <%= render "users/follow_button", user: article.user %>
   <% end %>
   <div class="favorite favorite--full">
-    <%= render "favorite_button", article: article %>
+    <%= render "favorite_button", article: article, favorited: favorited %>
   </div>
 </div>

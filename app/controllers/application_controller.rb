@@ -10,10 +10,4 @@ class ApplicationController < ActionController::Base
     def page_of(scope)
       Page.new(scope, number: params[:page])
     end
-
-    def favorited_ids_among(articles)
-      return [] unless authenticated?
-
-      Current.user.favorites.where(article_id: articles.map(&:id)).pluck(:article_id)
-    end
 end

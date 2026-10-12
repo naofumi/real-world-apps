@@ -42,4 +42,8 @@ class User < ApplicationRecord
 
     follows.exists?(followed: user)
   end
+
+  def favorited_among(articles)
+    favorite_articles.where(id: articles.map(&:id))
+  end
 end

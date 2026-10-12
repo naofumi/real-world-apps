@@ -8,7 +8,7 @@
       <span class="date"><%= posted_on article.created_at %></span>
     </div>
     <div class="favorite favorite--compact pull-xs-right">
-      <%= render "articles/favorite_button", article: article %>
+      <%= render "articles/favorite_button", article: article, favorited: favorited %>
     </div>
   </div>
   <%= link_to article, class: "preview-link" do %>

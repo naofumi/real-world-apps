@@ -9,7 +9,6 @@ class CommentsController < ApplicationController
       redirect_to @article, notice: "Comment posted."
     else
       @comments = @article.comments.oldest_first.includes(:user)
-      @favorited_ids = favorited_ids_among([ @article ])
       render "articles/show", status: :unprocessable_entity
     end
   end

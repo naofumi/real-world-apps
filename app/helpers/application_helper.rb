@@ -11,8 +11,4 @@ module ApplicationHelper
   def posted_on(time)
     time.strftime("%B #{time.day.ordinalize}")
   end
-
-  def favorited?(article)
-    @favorited_ids&.include?(article.id)
-  end
 end

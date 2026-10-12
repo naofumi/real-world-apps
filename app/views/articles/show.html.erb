@@ -1,8 +1,9 @@
+<% favorited = authenticated? && Current.user.favorites.exists?(article: @article) %>
 <div class="article-page">
   <div class="banner">
     <div class="container">
       <h1><%= @article.title %></h1>
-      <%= render "meta", article: @article %>
+      <%= render "meta", article: @article, favorited: favorited %>
     </div>
   </div>
 
@@ -21,7 +22,7 @@
     <hr>
 
     <div class="article-actions">
-      <%= render "meta", article: @article %>
+      <%= render "meta", article: @article, favorited: favorited %>
     </div>
 
     <div class="row">
