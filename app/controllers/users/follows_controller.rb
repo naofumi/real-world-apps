@@ -3,12 +3,20 @@ class Users::FollowsController < ApplicationController
 
   def create
     Current.user.follow(@user)
-    redirect_back_or_to @user, status: :see_other
+
+    respond_to do |format|
+      format.turbo_stream { render :update }
+      format.html { redirect_back_or_to @user, status: :see_other }
+    end
   end
 
   def destroy
     Current.user.unfollow(@user)
-    redirect_back_or_to @user, status: :see_other
+
+    respond_to do |format|
+      format.turbo_stream { render :update }
+      format.html { redirect_back_or_to @user, status: :see_other }
+    end
   end
 
   private

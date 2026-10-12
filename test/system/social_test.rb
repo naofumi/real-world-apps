@@ -19,14 +19,23 @@ class SocialTest < ApplicationSystemTestCase
 
   test "favoriting, following, and reading your feed" do
     sign_in users(:bob)
-    visit root_path
-    find("button[aria-label='Favorite Alice on Rails']").click
-    assert_selector "button[aria-label='Unfavorite Alice on Rails']"
+    visit article_path(articles(:alices))
+    find("button[aria-label='Favorite Alice on Rails']", match: :first).click
+    assert_current_path article_path(articles(:alices))
+    assert_selector "button[aria-label='Unfavorite Alice on Rails']", count: 2
+
+    find("button", text: "Follow alice", match: :first).click
+    assert_current_path article_path(articles(:alices))
+    assert_selector "button", text: "Unfollow alice", count: 2
 
     visit user_path(users(:alice))
     assert_selector "img.user-img[src*='default-avatar']"
-    click_button "Follow alice"
     assert_button "Unfollow alice"
+
+    visit root_path
+    find("button[aria-label='Unfavorite Alice on Rails']").click
+    assert_current_path root_path
+    assert_selector "button[aria-label='Favorite Alice on Rails']"
 
     visit feed_path
     assert_text "Alice on Rails"

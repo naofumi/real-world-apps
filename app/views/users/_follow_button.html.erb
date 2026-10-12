@@ -3,11 +3,11 @@
     <i class="ion-gear-a"></i>&nbsp;Edit Profile Settings
   <% end %>
 <% elsif authenticated? && Current.user.following?(user) %>
-  <%= button_to user_follow_path(user), method: :delete, class: "btn btn-sm btn-secondary" do %>
+  <%= button_to user_follow_path(user), method: :delete, class: "btn btn-sm btn-secondary", form_class: class_names("button_to", dom_id(user, :follow)) do %>
     <i class="ion-plus-round"></i>&nbsp;Unfollow <%= user.username %>
   <% end %>
 <% else %>
-  <%= button_to user_follow_path(user), class: "btn btn-sm btn-outline-secondary" do %>
+  <%= button_to user_follow_path(user), class: "btn btn-sm btn-outline-secondary", form_class: class_names("button_to", dom_id(user, :follow)) do %>
     <i class="ion-plus-round"></i>&nbsp;Follow <%= user.username %>
   <% end %>
 <% end %>

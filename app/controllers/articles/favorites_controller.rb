@@ -3,12 +3,24 @@ class Articles::FavoritesController < ApplicationController
 
   def create
     Current.user.favorites.find_or_create_by!(article: @article)
-    redirect_back_or_to @article, status: :see_other
+    @article.reload
+    @favorited_ids = favorited_ids_among([ @article ])
+
+    respond_to do |format|
+      format.turbo_stream { render :update }
+      format.html { redirect_back_or_to @article, status: :see_other }
+    end
   end
 
   def destroy
     Current.user.favorites.find_by(article: @article)&.destroy
-    redirect_back_or_to @article, status: :see_other
+    @article.reload
+    @favorited_ids = favorited_ids_among([ @article ])
+
+    respond_to do |format|
+      format.turbo_stream { render :update }
+      format.html { redirect_back_or_to @article, status: :see_other }
+    end
   end
 
   private

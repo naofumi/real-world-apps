@@ -7,7 +7,9 @@
       <%= link_to article.user.username, user_path(article.user), class: "author" %>
       <span class="date"><%= posted_on article.created_at %></span>
     </div>
-    <%= render "articles/favorite_button", article: article, compact: true %>
+    <div class="favorite favorite--compact pull-xs-right">
+      <%= render "articles/favorite_button", article: article %>
+    </div>
   </div>
   <%= link_to article, class: "preview-link" do %>
     <h1><%= article.title %></h1>

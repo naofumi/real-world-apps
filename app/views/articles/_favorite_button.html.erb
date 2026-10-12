@@ -1,10 +1,7 @@
 <% label = favorited?(article) ? "Unfavorite" : "Favorite" %>
 <% css = favorited?(article) ? "btn btn-sm btn-primary" : "btn btn-sm btn-outline-primary" %>
-<%= button_to article_favorite_path(article), method: (favorited?(article) ? :delete : :post), class: css, form_class: ("pull-xs-right" if local_assigns[:compact]), aria: { label: "#{label} #{article.title}" } do %>
+<%= button_to article_favorite_path(article), method: (favorited?(article) ? :delete : :post), class: css, form_class: class_names("button_to", dom_id(article, :favorite)), aria: { label: "#{label} #{article.title}" } do %>
   <i class="ion-heart"></i>
-  <% if local_assigns[:compact] %>
-    <%= article.favorites_count %>
-  <% else %>
-    &nbsp;<%= label %> Article <span class="counter">(<%= article.favorites_count %>)</span>
-  <% end %>
+  <span class="favorite__count"><%= article.favorites_count %></span>
+  <span class="favorite__label">&nbsp;<%= label %> Article <span class="counter">(<%= article.favorites_count %>)</span></span>
 <% end %>

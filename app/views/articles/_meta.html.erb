@@ -16,5 +16,7 @@
   <% elsif article.user != Current.user %>
     <%= render "users/follow_button", user: article.user %>
   <% end %>
-  <%= render "favorite_button", article: article %>
+  <div class="favorite favorite--full">
+    <%= render "favorite_button", article: article %>
+  </div>
 </div>

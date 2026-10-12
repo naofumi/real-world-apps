@@ -28,4 +28,25 @@ class Articles::FavoritesControllerTest < ActionDispatch::IntegrationTest
       post article_favorite_path(articles(:bobs))
     end
   end
+
+  test "turbo stream replaces every favorite button for the article" do
+    sign_in_as users(:bob)
+    article = articles(:alices)
+
+    post article_favorite_path(article), as: :turbo_stream
+
+    assert_response :success
+    assert_turbo_stream action: "replace", targets: ".favorite_article_#{article.id}" do
+      assert_select ".favorite__label", text: /Unfavorite Article \(1\)/
+      assert_select ".favorite__count", text: "1"
+    end
+
+    delete article_favorite_path(article), as: :turbo_stream
+
+    assert_response :success
+    assert_turbo_stream action: "replace", targets: ".favorite_article_#{article.id}" do
+      assert_select ".favorite__label", text: /Favorite Article \(0\)/
+      assert_select ".favorite__count", text: "0"
+    end
+  end
 end

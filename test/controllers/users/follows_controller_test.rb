@@ -21,6 +21,24 @@ class Users::FollowsControllerTest < ActionDispatch::IntegrationTest
     assert_not users(:bob).reload.following?(users(:alice))
   end
 
+  test "turbo stream replaces every follow button for the user" do
+    sign_in_as users(:bob)
+
+    post user_follow_path(users(:alice)), as: :turbo_stream
+
+    assert_response :success
+    assert_turbo_stream action: "replace", targets: ".follow_user_#{users(:alice).id}" do
+      assert_select "button", text: /Unfollow alice/
+    end
+
+    delete user_follow_path(users(:alice)), as: :turbo_stream
+
+    assert_response :success
+    assert_turbo_stream action: "replace", targets: ".follow_user_#{users(:alice).id}" do
+      assert_select "button.btn-outline-secondary", text: /Follow alice/
+    end
+  end
+
   test "a user cannot follow themselves" do
     sign_in_as users(:alice)
 
