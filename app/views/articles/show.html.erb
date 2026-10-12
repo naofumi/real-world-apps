@@ -1,4 +1,4 @@
-<% favorited = authenticated? && Current.user.favorites.exists?(article: @article) %>
+<% favorited = authenticated? && @article.favorite_by_current_user.present? %>
 <div class="article-page">
   <div class="banner">
     <div class="container">

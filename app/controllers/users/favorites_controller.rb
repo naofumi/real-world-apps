@@ -3,6 +3,6 @@ class Users::FavoritesController < ApplicationController
 
   def index
     @user = User.find_by_username!(params[:user_id])
-    @page = page_of(@user.favorite_articles.recent.includes(:user, :tags))
+    @page = page_of(@user.favorite_articles.recent.includes(:user, :tags).preload(:favorite_by_current_user))
   end
 end

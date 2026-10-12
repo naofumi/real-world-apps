@@ -6,7 +6,7 @@ class Page
   def initialize(scope, number:)
     @number = [ number.to_i, 1 ].max
     @count = scope.unscope(:order).distinct.count(:id)
-    @records = scope.offset((@number - 1) * PER_PAGE).limit(PER_PAGE).load
+    @records = scope.offset((@number - 1) * PER_PAGE).limit(PER_PAGE)
   end
 
   def total_pages

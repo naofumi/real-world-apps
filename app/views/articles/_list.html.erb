@@ -1,7 +1,6 @@
-<% if page.records.any? %>
-  <% favorited_articles = authenticated? ? Current.user.favorited_among(page.records).load : [] %>
+<% if page.records.length > 0 %>
   <% page.records.each do |article| %>
-    <%= render "articles/article", article: article, favorited: favorited_articles.include?(article) %>
+    <%= render "articles/article", article: article, favorited: article.favorite_by_current_user.present? %>
   <% end %>
 <% else %>
   <div class="empty-feed-message">No articles are here... yet.</div>

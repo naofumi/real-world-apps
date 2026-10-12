@@ -61,6 +61,6 @@ class ArticlesController < ApplicationController
     end
 
     def listed_articles
-      Article.recent.includes(:user, :tags)
+      Article.recent.includes(:user, :tags).preload(:favorite_by_current_user)
     end
 end

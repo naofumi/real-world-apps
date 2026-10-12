@@ -1,3 +1,3 @@
 <%= turbo_stream.replace_all ".#{dom_id(@article, :favorite)}" do %>
-  <%= render "articles/favorite_button", article: @article, favorited: Current.user.favorites.exists?(article: @article) %>
+  <%= render "articles/favorite_button", article: @article, favorited: @article.favorite_by_current_user.present? %>
 <% end %>

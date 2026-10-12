@@ -5,6 +5,7 @@ class Article < ApplicationRecord
   has_many :tags, through: :taggings
   has_many :favorites, dependent: :destroy
   has_many :favoriters, through: :favorites, source: :user
+  has_one :favorite_by_current_user, -> { Current.user ? where(user: Current.user) : none }, class_name: "Favorite"
 
   validates :title, :description, :body, presence: true
   validates :slug, presence: true, uniqueness: true
