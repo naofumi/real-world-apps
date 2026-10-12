@@ -1,0 +1,13 @@
+<% if authenticated? && user == Current.user %>
+  <%= link_to edit_settings_path, class: "btn btn-sm btn-outline-secondary" do %>
+    <i class="ion-gear-a"></i>&nbsp;Edit Profile Settings
+  <% end %>
+<% elsif authenticated? && Current.user.following?(user) %>
+  <%= button_to user_follow_path(user), method: :delete, class: "btn btn-sm btn-secondary" do %>
+    <i class="ion-plus-round"></i>&nbsp;Unfollow <%= user.username %>
+  <% end %>
+<% else %>
+  <%= button_to user_follow_path(user), class: "btn btn-sm btn-outline-secondary" do %>
+    <i class="ion-plus-round"></i>&nbsp;Follow <%= user.username %>
+  <% end %>
+<% end %>

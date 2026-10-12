@@ -1,0 +1,22 @@
+<div class="article-preview">
+  <div class="article-meta">
+    <%= link_to user_path(article.user) do %>
+      <%= avatar_tag article.user %>
+    <% end %>
+    <div class="info">
+      <%= link_to article.user.username, user_path(article.user), class: "author" %>
+      <span class="date"><%= posted_on article.created_at %></span>
+    </div>
+    <%= render "articles/favorite_button", article: article, compact: true %>
+  </div>
+  <%= link_to article, class: "preview-link" do %>
+    <h1><%= article.title %></h1>
+    <p><%= article.description %></p>
+    <span>Read more...</span>
+    <ul class="tag-list">
+      <% article.tags.each do |tag| %>
+        <li class="tag-default tag-pill tag-outline"><%= tag.name %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

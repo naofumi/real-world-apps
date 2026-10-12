@@ -1,0 +1,9 @@
+<% if page.total_pages > 1 %>
+  <ul class="pagination">
+    <% (1..page.total_pages).each do |number| %>
+      <li class="page-item <%= "active" if number == page.number %>">
+        <%= link_to number, url_for(request.query_parameters.merge(page: number)), class: "page-link" %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

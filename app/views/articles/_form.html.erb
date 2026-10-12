@@ -1,0 +1,21 @@
+<%= form_with model: article do |form| %>
+  <%= render "shared/errors", record: article %>
+
+  <fieldset class="form-group">
+    <%= form.label :title, "Title" %>
+    <%= form.text_field :title, class: "form-control form-control-lg", placeholder: "Article Title", required: true %>
+  </fieldset>
+  <fieldset class="form-group">
+    <%= form.label :description, "Description" %>
+    <%= form.text_field :description, class: "form-control", placeholder: "What's this article about?", required: true %>
+  </fieldset>
+  <fieldset class="form-group">
+    <%= form.label :body, "Body" %>
+    <%= form.text_area :body, class: "form-control", rows: 8, placeholder: "Write your article (in markdown)", required: true %>
+  </fieldset>
+  <fieldset class="form-group">
+    <%= form.label :tag_list, "Tags" %>
+    <%= form.text_field :tag_list, class: "form-control", placeholder: "Enter tags" %>
+  </fieldset>
+  <%= form.submit "Publish Article", class: "btn btn-lg btn-primary pull-xs-right" %>
+<% end %>
