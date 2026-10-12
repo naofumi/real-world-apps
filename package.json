@@ -1,0 +1,26 @@
+{
+  "name": "conduit",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w @conduit/api\" \"npm run dev -w @conduit/web\"",
+    "dev:api": "npm run dev -w @conduit/api",
+    "dev:web": "npm run dev -w @conduit/web",
+    "build": "npm run build -w @conduit/web",
+    "start": "npm run start -w @conduit/api",
+    "db:generate": "npm run generate -w @conduit/db",
+    "db:seed": "npm run seed -w @conduit/api",
+    "test": "npm run test -w @conduit/api",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
