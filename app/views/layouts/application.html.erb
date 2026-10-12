@@ -19,6 +19,7 @@
     <%= stylesheet_link_tag "https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700|Lora:400,700" %>
     <%= stylesheet_link_tag "conduit", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= capybara_lockstep if defined?(Capybara::Lockstep) %>
     <%= javascript_importmap_tags %>
   </head>
 

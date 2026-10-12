@@ -23,7 +23,7 @@ class ArticlesTest < ApplicationSystemTestCase
     assert_current_path article_path("markdown-post-revised")
 
     accept_confirm do
-      click_button "Delete Article", match: :first
+      click_button "delete_article", match: :first
     end
 
     assert_text "Article deleted"

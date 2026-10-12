@@ -12,7 +12,7 @@ class SocialTest < ApplicationSystemTestCase
 
     sign_in users(:alice)
     visit article_path(articles(:bobs))
-    click_button "Delete comment"
+    click_button "delete_comment"
 
     assert_no_text "His name was my name too."
   end

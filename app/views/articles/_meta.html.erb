@@ -10,7 +10,7 @@
     <%= link_to edit_article_path(article), class: "btn btn-sm btn-outline-secondary" do %>
       <i class="ion-edit"></i>&nbsp;Edit Article
     <% end %>
-    <%= button_to article_path(article), method: :delete, class: "btn btn-sm btn-outline-danger", data: { turbo_confirm: "Delete this article?" } do %>
+    <%= button_to article_path(article), method: :delete, class: "btn btn-sm btn-outline-danger", data: { turbo_confirm: "Delete this article?", testid: 'delete_article' } do %>
       <i class="ion-trash-a"></i>&nbsp;Delete Article
     <% end %>
   <% elsif article.user != Current.user %>

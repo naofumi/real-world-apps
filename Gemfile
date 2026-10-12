@@ -62,8 +62,10 @@ end
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
+  gem "capybara-lockstep", "~> 2.3"
   gem "selenium-webdriver"
 end
 
 # GitHub-flavored Markdown for article bodies. Output is sanitized in the view.
 gem "commonmarker", "~> 2.10"
+
