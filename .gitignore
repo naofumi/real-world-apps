@@ -8,3 +8,6 @@ data/
 .env
 .DS_Store
 .idea/
+playwright-report/
+test-results/
+blob-report/
