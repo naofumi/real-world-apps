@@ -7,9 +7,13 @@ import { api } from "./client.js";
 
 type AuthState = "authenticated" | "unauthenticated" | "unavailable" | "loading";
 
-const snapshot: { user: User | null; state: AuthState } = {
-  user: null,
+type AuthSnapshot =
+  | { state: "loading" | "unauthenticated" | "unavailable"; user: null }
+  | { state: "authenticated"; user: User };
+
+let snapshot: AuthSnapshot = {
   state: "loading",
+  user: null,
 };
 
 window.__conduit_debug__ = {
@@ -49,11 +53,10 @@ export function useCurrentUser() {
   });
 
   useEffect(() => {
-    if (query.isPending) snapshot.state = "loading";
-    else if (query.isError) snapshot.state = "unavailable";
-    else if (query.data) snapshot.state = "authenticated";
-    else snapshot.state = "unauthenticated";
-    snapshot.user = query.data ?? null;
+    if (query.isPending) snapshot = { state: "loading", user: null };
+    else if (query.isError) snapshot = { state: "unavailable", user: null };
+    else if (query.data) snapshot = { state: "authenticated", user: query.data };
+    else snapshot = { state: "unauthenticated", user: null };
   }, [query.isPending, query.isError, query.data]);
 
   return query;
@@ -63,8 +66,7 @@ export function useRememberUser() {
   const queryClient = useQueryClient();
   return (user: User) => {
     setToken(user.token);
-    snapshot.user = user;
-    snapshot.state = "authenticated";
+    snapshot = { state: "authenticated", user };
     queryClient.setQueryData(["me"], user);
     void queryClient.invalidateQueries({ queryKey: ["articles"] });
     void queryClient.invalidateQueries({ queryKey: ["article"] });
@@ -81,8 +83,7 @@ export function useLogout() {
     navigate("/", { replace: true });
     queueMicrotask(() => {
       setToken(null);
-      snapshot.user = null;
-      snapshot.state = "unauthenticated";
+      snapshot = { state: "unauthenticated", user: null };
       queryClient.setQueryData(["me"], null);
       queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== "me" });
     });
