@@ -3,18 +3,17 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Markdown from "react-markdown";
 import { ApiError } from "../../lib/api.js";
-import { useCurrentUser } from "../../lib/auth.js";
+import { useAuth } from "../../lib/auth.js";
 import { api } from "../../lib/client.js";
 import { avatar, useDocumentTitle } from "../../lib/format.js";
-import { ArticleMeta } from "./article-meta.js";
-import { FavoriteButton } from "./favorite-button.js";
-import { FollowButton } from "../profiles/follow-button.js";
+import { viewerRole } from "../../lib/viewer-role.js";
+import { ArticleActions } from "./article-actions.js";
 import { ErrorList } from "../shell/error-list.js";
 
 export function ArticlePage() {
   const { slug = "" } = useParams();
   const navigate = useNavigate();
-  const me = useCurrentUser();
+  const auth = useAuth();
   const queryClient = useQueryClient();
   const articleQuery = useQuery({
     queryKey: ["article", slug],
@@ -43,39 +42,14 @@ export function ArticlePage() {
   }
   if (!article) return null;
 
-  const owned = me.data?.username === article.author.username;
+  const role = viewerRole(auth, article.author.username, article.author.following);
 
   return (
     <div className="article-page">
       <div className="banner">
         <div className="container">
           <h1>{article.title}</h1>
-          <ArticleMeta author={article.author} date={article.createdAt}>
-            {owned ? (
-              <>
-                <Link className="btn btn-sm btn-outline-secondary" to={`/editor/${encodeURIComponent(article.slug)}`}>
-                  <i className="ion-edit" /> Edit Article
-                </Link>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={() => {
-                    if (window.confirm("Delete this article?")) remove.mutate();
-                  }}
-                >
-                  <i className="ion-trash-a" /> Delete Article
-                </button>
-              </>
-            ) : (
-              <FollowButton username={article.author.username} following={article.author.following} />
-            )}
-            <FavoriteButton
-              slug={article.slug}
-              favorited={article.favorited}
-              favoritesCount={article.favoritesCount}
-              variant="detail"
-            />
-          </ArticleMeta>
+          <ArticleActions role={role} article={article} onDelete={() => remove.mutate()} />
         </div>
       </div>
 
@@ -94,38 +68,13 @@ export function ArticlePage() {
         </div>
         <hr />
         <div className="article-actions">
-          <ArticleMeta author={article.author} date={article.createdAt}>
-            {owned ? (
-              <>
-                <Link className="btn btn-sm btn-outline-secondary" to={`/editor/${encodeURIComponent(article.slug)}`}>
-                  <i className="ion-edit" /> Edit Article
-                </Link>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={() => {
-                    if (window.confirm("Delete this article?")) remove.mutate();
-                  }}
-                >
-                  <i className="ion-trash-a" /> Delete Article
-                </button>
-              </>
-            ) : (
-              <FollowButton username={article.author.username} following={article.author.following} />
-            )}
-            <FavoriteButton
-              slug={article.slug}
-              favorited={article.favorited}
-              favoritesCount={article.favoritesCount}
-              variant="detail"
-            />
-          </ArticleMeta>
+          <ArticleActions role={role} article={article} onDelete={() => remove.mutate()} />
         </div>
 
         <div className="row">
           <div className="col-xs-12 col-md-8 offset-md-2">
-            {me.data ? (
-              <CommentForm slug={slug} image={me.data.image} />
+            {auth.state === "authenticated" ? (
+              <CommentForm slug={slug} image={auth.user.image} />
             ) : (
               <p>
                 <Link to="/login">Sign in</Link> or <Link to="/register">sign up</Link> to add comments on this article.
@@ -146,7 +95,7 @@ export function ArticlePage() {
                     {comment.author.username}
                   </Link>
                   <span className="date-posted">{new Date(comment.createdAt).toLocaleDateString()}</span>
-                  {me.data?.username === comment.author.username ? (
+                  {auth.state === "authenticated" && auth.user.username === comment.author.username ? (
                     <DeleteComment slug={slug} id={comment.id} />
                   ) : null}
                 </div>
