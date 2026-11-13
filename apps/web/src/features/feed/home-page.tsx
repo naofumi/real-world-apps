@@ -8,30 +8,48 @@ import { Pagination } from "../shell/pagination.js";
 
 const PAGE_SIZE = 10;
 
+type FeedMode =
+  | { kind: "global" }
+  | { kind: "following" }
+  | { kind: "tag"; tag: string };
+
 function pageNumber(value: string | null): number {
   const parsed = Number(value ?? "1");
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function feedMode(tag: string | undefined, searchParams: URLSearchParams): FeedMode {
+  if (tag) {
+    return { kind: "tag", tag };
+  } else if (searchParams.get("feed") === "following") {
+    return { kind: "following" };
+  } else {
+    return { kind: "global" };
+  }
 }
 
 export function HomePage() {
   const { tag } = useParams();
   const [searchParams] = useSearchParams();
   const me = useCurrentUser();
-  const feed = !tag && searchParams.get("feed") === "following";
+  const mode = feedMode(tag, searchParams);
   const page = pageNumber(searchParams.get("page"));
-  useDocumentTitle(tag ? `#${tag}` : "Home");
+  useDocumentTitle(mode.kind === "tag" ? `#${mode.tag}` : "Home");
 
   const articles = useQuery({
-    queryKey: ["articles", { tag: tag ?? null, feed, page }],
-    enabled: !feed || Boolean(me.data),
-    queryFn: () =>
-      feed
-        ? api.feed({ limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE })
-        : api.listArticles({
-            tag,
-            limit: PAGE_SIZE,
-            offset: (page - 1) * PAGE_SIZE,
-          }),
+    queryKey: ["articles", { mode, page }],
+    enabled: mode.kind !== "following" || Boolean(me.data),
+    queryFn: () => {
+      const paging = { limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE };
+      switch (mode.kind) {
+        case "following":
+          return api.feed(paging);
+        case "tag":
+          return api.listArticles({ tag: mode.tag, ...paging });
+        case "global":
+          return api.listArticles(paging);
+      }
+    },
   });
   const tags = useQuery({ queryKey: ["tags"], queryFn: () => api.tags() });
 
@@ -40,7 +58,7 @@ export function HomePage() {
     if (nextPage <= 1) params.delete("page");
     else params.set("page", String(nextPage));
     const query = params.toString();
-    const path = tag ? `/tag/${encodeURIComponent(tag)}` : "/";
+    const path = mode.kind === "tag" ? `/tag/${encodeURIComponent(mode.tag)}` : "/";
     return query ? `${path}?${query}` : path;
   }
 
@@ -59,26 +77,26 @@ export function HomePage() {
               <ul className="nav nav-pills outline-active">
                 {me.data ? (
                   <li className="nav-item">
-                    <Link className={`nav-link${feed ? " active" : ""}`} to="/?feed=following">
+                    <Link className={`nav-link${mode.kind === "following" ? " active" : ""}`} to="/?feed=following">
                       Your Feed
                     </Link>
                   </li>
                 ) : null}
                 <li className="nav-item">
-                  <Link className={`nav-link${!feed && !tag ? " active" : ""}`} to="/">
+                  <Link className={`nav-link${mode.kind === "global" ? " active" : ""}`} to="/">
                     Global Feed
                   </Link>
                 </li>
-                {tag ? (
+                {mode.kind === "tag" ? (
                   <li className="nav-item">
-                    <Link className="nav-link active" to={`/tag/${encodeURIComponent(tag)}`}>
-                      #{tag}
+                    <Link className="nav-link active" to={`/tag/${encodeURIComponent(mode.tag)}`}>
+                      #{mode.tag}
                     </Link>
                   </li>
                 ) : null}
               </ul>
             </div>
-            {feed && !me.isPending && !me.data ? (
+            {mode.kind === "following" && !me.isPending && !me.data ? (
               <div className="article-preview">
                 <Link to="/login">Sign in</Link> to see your feed.
               </div>

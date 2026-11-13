@@ -47,8 +47,18 @@ describe("HomePage query key", () => {
     const queryClient = renderHome("/tag/react?page=2");
 
     await waitFor(() => expect(api.listArticles).toHaveBeenCalled());
-    expect(queryClient.getQueryCache().find({ exact: true, queryKey: ["articles", { tag: "react", feed: false, page: 2 }] })).toBeTruthy();
-    expect(queryClient.getQueryCache().find({ exact: true, queryKey: ["articles", { tag: null, feed: false, page: 1 }] })).toBeUndefined();
+    expect(
+      queryClient.getQueryCache().find({
+        exact: true,
+        queryKey: ["articles", { mode: { kind: "tag", tag: "react" }, page: 2 }],
+      }),
+    ).toBeTruthy();
+    expect(
+      queryClient.getQueryCache().find({
+        exact: true,
+        queryKey: ["articles", { mode: { kind: "global" }, page: 1 }],
+      }),
+    ).toBeUndefined();
   });
 
   test("your feed has its own cache entry", async () => {
@@ -56,6 +66,11 @@ describe("HomePage query key", () => {
     const queryClient = renderHome("/?feed=following");
 
     await waitFor(() => expect(api.feed).toHaveBeenCalled());
-    expect(queryClient.getQueryCache().find({ exact: true, queryKey: ["articles", { tag: null, feed: true, page: 1 }] })).toBeTruthy();
+    expect(
+      queryClient.getQueryCache().find({
+        exact: true,
+        queryKey: ["articles", { mode: { kind: "following" }, page: 1 }],
+      }),
+    ).toBeTruthy();
   });
 });
