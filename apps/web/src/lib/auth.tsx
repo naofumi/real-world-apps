@@ -1,9 +1,10 @@
 import type { User } from "@conduit/contracts";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useEffect, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { ApiError, getToken, setToken } from "./api.js";
 import { api } from "./client.js";
+import { loginLocationState } from "./login-state.js";
 
 type AuthState = "authenticated" | "unauthenticated" | "unavailable" | "loading";
 
@@ -74,19 +75,19 @@ export function useRememberUser() {
   };
 }
 
+function clearSessionAfterLeavingHome(queryClient: QueryClient) {
+  setToken(null);
+  snapshot = { state: "unauthenticated", user: null };
+  queryClient.setQueryData(["me"], null);
+  queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== "me" });
+}
+
 export function useLogout() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   return () => {
-    // Leave protected routes before clearing the session. Otherwise
-    // RequireAuth sends the user to /login as soon as `me` becomes null.
     navigate("/", { replace: true });
-    queueMicrotask(() => {
-      setToken(null);
-      snapshot = { state: "unauthenticated", user: null };
-      queryClient.setQueryData(["me"], null);
-      queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== "me" });
-    });
+    queueMicrotask(() => clearSessionAfterLeavingHome(queryClient));
   };
 }
 
@@ -94,6 +95,6 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const location = useLocation();
   const me = useCurrentUser();
   if (me.isPending) return <div className="container page">Loading...</div>;
-  if (!me.data) return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
+  if (!me.data) return <Navigate to="/login" replace state={loginLocationState(location.pathname, location.search)} />;
   return children;
 }

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCurrentUser } from "../../lib/auth.js";
 import { api, type ArticleList } from "../../lib/client.js";
+import { loginLocationState } from "../../lib/login-state.js";
 
 function toggle(article: ArticleCard | Article, favorited: boolean) {
   const delta = favorited === article.favorited ? 0 : favorited ? 1 : -1;
@@ -44,7 +45,7 @@ export function FavoriteButton({
 
   function onClick() {
     if (!me.data) {
-      navigate("/login", { state: { from: `${location.pathname}${location.search}` } });
+      navigate("/login", { state: loginLocationState(location.pathname, location.search) });
       return;
     }
     mutation.mutate();

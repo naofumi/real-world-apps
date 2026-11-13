@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCurrentUser } from "../../lib/auth.js";
 import { api } from "../../lib/client.js";
+import { loginLocationState } from "../../lib/login-state.js";
 
 export function FollowButton({ username, following }: { username: string; following: boolean }) {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export function FollowButton({ username, following }: { username: string; follow
       disabled={mutation.isPending}
       onClick={() => {
         if (!me.data) {
-          navigate("/login", { state: { from: `${location.pathname}${location.search}` } });
+          navigate("/login", { state: loginLocationState(location.pathname, location.search) });
           return;
         }
         mutation.mutate();

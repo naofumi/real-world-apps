@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDocumentTitle } from "../../lib/format.js";
 import { useRememberUser } from "../../lib/auth.js";
 import { api } from "../../lib/client.js";
+import { loginRedirectPath } from "../../lib/login-state.js";
 import { ErrorList } from "../shell/error-list.js";
 
 export function LoginPage() {
@@ -13,7 +14,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   useDocumentTitle("Sign in");
-  const from = (location.state as { from?: string } | null)?.from ?? "/";
+  const from = loginRedirectPath(location.state);
   const mutation = useMutation({
     mutationFn: () => api.login({ email, password }),
     onSuccess: ({ user }) => {
