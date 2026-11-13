@@ -5,6 +5,8 @@ import { useCurrentUser } from "../../lib/auth.js";
 import { api, type ArticleList } from "../../lib/client.js";
 import { loginLocationState } from "../../lib/login-state.js";
 
+type ArticleQueryData = { article: Article };
+
 function toggle(article: ArticleCard | Article, favorited: boolean) {
   const delta = favorited === article.favorited ? 0 : favorited ? 1 : -1;
   return {
@@ -17,12 +19,9 @@ function toggle(article: ArticleCard | Article, favorited: boolean) {
 export function FavoriteButton({
   slug,
   favorited,
-  count,
+  favoritesCount,
   variant,
-}: {
-  slug: string;
-  favorited: boolean;
-  count: number;
+}: Pick<ArticleCard, "slug" | "favorited" | "favoritesCount"> & {
   variant: "preview" | "detail";
 }) {
   const navigate = useNavigate();
@@ -32,7 +31,7 @@ export function FavoriteButton({
   const mutation = useMutation({
     mutationFn: () => (favorited ? api.unfavorite(slug) : api.favorite(slug)),
     onSuccess: ({ article }) => {
-      queryClient.setQueryData(["article", slug], { article });
+      queryClient.setQueryData<ArticleQueryData>(["article", slug], { article });
       queryClient.setQueriesData<ArticleList>({ queryKey: ["articles"] }, (current) => {
         if (!current) return current;
         return {
@@ -57,10 +56,10 @@ export function FavoriteButton({
       <i className="ion-heart" />
       {variant === "detail" ? (
         <>
-          &nbsp; {favorited ? "Unfavorite" : "Favorite"} Article <span className="counter">({count})</span>
+          &nbsp; {favorited ? "Unfavorite" : "Favorite"} Article <span className="counter">({favoritesCount})</span>
         </>
       ) : (
-        <> {count}</>
+        <> {favoritesCount}</>
       )}
     </button>
   );

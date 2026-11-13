@@ -22,7 +22,12 @@ export function ArticlePreview({ article }: { article: ArticleCard }) {
   return (
     <div className="article-preview">
       <ArticleMeta author={article.author} date={article.createdAt}>
-        <FavoriteButton slug={article.slug} favorited={article.favorited} count={article.favoritesCount} variant="preview" />
+        <FavoriteButton
+          slug={article.slug}
+          favorited={article.favorited}
+          favoritesCount={article.favoritesCount}
+          variant="preview"
+        />
       </ArticleMeta>
       <Link className="preview-link" to={`/article/${encodeURIComponent(article.slug)}`}>
         <h1>{article.title}</h1>

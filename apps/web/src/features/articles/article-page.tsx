@@ -69,7 +69,12 @@ export function ArticlePage() {
             ) : (
               <FollowButton username={article.author.username} following={article.author.following} />
             )}
-            <FavoriteButton slug={article.slug} favorited={article.favorited} count={article.favoritesCount} variant="detail" />
+            <FavoriteButton
+              slug={article.slug}
+              favorited={article.favorited}
+              favoritesCount={article.favoritesCount}
+              variant="detail"
+            />
           </ArticleMeta>
         </div>
       </div>
@@ -108,7 +113,12 @@ export function ArticlePage() {
             ) : (
               <FollowButton username={article.author.username} following={article.author.following} />
             )}
-            <FavoriteButton slug={article.slug} favorited={article.favorited} count={article.favoritesCount} variant="detail" />
+            <FavoriteButton
+              slug={article.slug}
+              favorited={article.favorited}
+              favoritesCount={article.favoritesCount}
+              variant="detail"
+            />
           </ArticleMeta>
         </div>
 

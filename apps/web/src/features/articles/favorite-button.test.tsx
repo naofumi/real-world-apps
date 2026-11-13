@@ -62,7 +62,7 @@ describe("FavoriteButton", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <FavoriteButton slug="one" favorited={false} count={0} variant="detail" />
+          <FavoriteButton slug="one" favorited={false} favoritesCount={0} variant="detail" />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -70,7 +70,9 @@ describe("FavoriteButton", () => {
     await waitFor(() => expect(window.__conduit_debug__?.getSnapshot().state).toBe("authenticated"));
     await user.click(screen.getByRole("button", { name: /Favorite Article/ }));
 
-    await waitFor(() => expect(queryClient.getQueryData(["article", "one"])).toEqual({ article: returned }));
+    await waitFor(() =>
+      expect(queryClient.getQueryData<{ article: Article }>(["article", "one"])).toEqual({ article: returned }),
+    );
     expect(queryClient.getQueryData<ArticleList>(listKey)?.articles[0]).toMatchObject({ favorited: true, favoritesCount: 1 });
   });
 });
