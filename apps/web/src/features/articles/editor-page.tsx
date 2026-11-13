@@ -14,40 +14,56 @@ type Draft = {
   tagList: string[];
 };
 
+type EditorFormModel =
+  | { mode: "create" }
+  | { mode: "edit"; slug: string; initial: Draft };
+
+const emptyDraft: Draft = { title: "", description: "", body: "", tagList: [] };
+
 export function EditorPage() {
   const { slug } = useParams();
   const me = useCurrentUser();
   const article = useQuery({
     queryKey: ["article", slug],
-    queryFn: () => api.article(slug!),
     enabled: Boolean(slug),
+    queryFn: () => {
+      if (!slug) {
+        return Promise.reject(new Error("Article slug is required"));
+      }
+      return api.article(slug);
+    },
   });
   useDocumentTitle(slug ? "Edit Article" : "New Article");
 
-  if (slug && article.isLoading) return <div className="editor-page container page">Loading...</div>;
-  if (slug && article.isError) {
+  if (!slug) {
+    return <EditorForm key="new" model={{ mode: "create" }} />;
+  }
+
+  if (article.isLoading) return <div className="editor-page container page">Loading...</div>;
+  if (article.isError) {
     const missing = article.error instanceof ApiError && article.error.status === 404;
     return <div className="editor-page container page">{missing ? "Article not found." : "Could not load the article."}</div>;
   }
 
-  if (slug && article.data && me.data && article.data.article.author.username !== me.data.username) {
+  if (article.data && me.data && article.data.article.author.username !== me.data.username) {
     return <div className="editor-page container page">You can only edit your own articles.</div>;
   }
 
-  const initial: Draft = article.data
-    ? {
-        title: article.data.article.title,
-        description: article.data.article.description,
-        body: article.data.article.body,
-        tagList: article.data.article.tagList,
-      }
-    : { title: "", description: "", body: "", tagList: [] };
+  if (!article.data) return null;
 
-  return <EditorForm key={slug ?? "new"} slug={slug} initial={initial} />;
+  const initial: Draft = {
+    title: article.data.article.title,
+    description: article.data.article.description,
+    body: article.data.article.body,
+    tagList: article.data.article.tagList,
+  };
+
+  return <EditorForm key={slug} model={{ mode: "edit", slug, initial }} />;
 }
 
-function EditorForm({ slug, initial }: { slug?: string; initial: Draft }) {
+function EditorForm({ model }: { model: EditorFormModel }) {
   const navigate = useNavigate();
+  const initial = model.mode === "edit" ? model.initial : emptyDraft;
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
   const [body, setBody] = useState(initial.body);
@@ -56,7 +72,12 @@ function EditorForm({ slug, initial }: { slug?: string; initial: Draft }) {
   const mutation = useMutation({
     mutationFn: () => {
       const input = { title, description, body, tagList };
-      return slug ? api.updateArticle(slug, input) : api.createArticle(input);
+      switch (model.mode) {
+        case "create":
+          return api.createArticle(input);
+        case "edit":
+          return api.updateArticle(model.slug, input);
+      }
     },
     onSuccess: ({ article }) => navigate(`/article/${encodeURIComponent(article.slug)}`),
   });
