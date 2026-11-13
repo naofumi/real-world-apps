@@ -98,6 +98,11 @@ function throwIfNeeded(errors: ErrorBag) {
   if (Object.keys(errors).length > 0) throw new AppError("validation", errors);
 }
 
+function assertPresent<T>(value: T | undefined): T {
+  if (value === undefined) throw new Error("missing value after validation");
+  return value;
+}
+
 export async function parseRegister(c: Context) {
   const user = objectField(await readJson(c), "user");
   const errors: ErrorBag = {};
@@ -105,7 +110,11 @@ export async function parseRegister(c: Context) {
   const email = requiredEmail(errors, user.email);
   const password = requiredPassword(errors, user.password);
   throwIfNeeded(errors);
-  return { username: username!, email: email!, password: password! };
+  return {
+    username: assertPresent(username),
+    email: assertPresent(email),
+    password: assertPresent(password),
+  };
 }
 
 export async function parseLogin(c: Context) {
@@ -114,7 +123,10 @@ export async function parseLogin(c: Context) {
   const email = requiredEmail(errors, user.email);
   const password = requiredPassword(errors, user.password);
   throwIfNeeded(errors);
-  return { email: email!, password: password! };
+  return {
+    email: assertPresent(email),
+    password: assertPresent(password),
+  };
 }
 
 export async function parseUpdateUser(c: Context) {
@@ -182,7 +194,12 @@ export async function parseNewArticle(c: Context) {
   const body = requiredText(errors, "body", article.body);
   const tagList = parseTagList(errors, article.tagList);
   throwIfNeeded(errors);
-  return { title: title!, description: description!, body: body!, tagList: tagList ?? [] };
+  return {
+    title: assertPresent(title),
+    description: assertPresent(description),
+    body: assertPresent(body),
+    tagList: tagList ?? [],
+  };
 }
 
 export async function parseUpdateArticle(c: Context) {
@@ -216,7 +233,7 @@ export async function parseNewComment(c: Context) {
   const errors: ErrorBag = {};
   const body = requiredText(errors, "body", comment.body);
   throwIfNeeded(errors);
-  return { body: body! };
+  return { body: assertPresent(body) };
 }
 
 function integerParam(raw: string | undefined, field: string, fallback: number, minimum: number): number {
@@ -227,7 +244,7 @@ function integerParam(raw: string | undefined, field: string, fallback: number, 
   return value;
 }
 
-export function parseListQuery(c: Context, options: { feed?: boolean } = {}) {
+export function parseListQuery(c: Context) {
   const tag = c.req.query("tag");
   const author = c.req.query("author");
   const favorited = c.req.query("favorited");
@@ -237,6 +254,5 @@ export function parseListQuery(c: Context, options: { feed?: boolean } = {}) {
     favorited: favorited || undefined,
     limit: integerParam(c.req.query("limit"), "limit", 20, 1),
     offset: integerParam(c.req.query("offset"), "offset", 0, 0),
-    feed: options.feed ?? false,
   };
 }

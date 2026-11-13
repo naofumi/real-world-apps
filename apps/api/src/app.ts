@@ -32,7 +32,7 @@ export function createApp(db: Db, options: AppOptions = {}) {
   const app = new Hono<AppEnv>();
 
   app.onError((error, c) => {
-    if (error instanceof AppError) return c.json({ errors: error.errors }, error.status as 401);
+    if (error instanceof AppError) return c.json({ errors: error.errors }, error.status);
     console.error(error);
     return c.json({ errors: { server: ["internal error"] } }, 500);
   });

@@ -9,9 +9,10 @@ const STATUS = {
 } as const;
 
 export type ErrorCode = keyof typeof STATUS;
+export type ErrorStatus = (typeof STATUS)[ErrorCode];
 
 export class AppError extends Error {
-  readonly status: number;
+  readonly status: ErrorStatus;
 
   constructor(
     public readonly code: ErrorCode,
