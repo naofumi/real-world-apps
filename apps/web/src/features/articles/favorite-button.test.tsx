@@ -67,7 +67,7 @@ describe("FavoriteButton", () => {
       </QueryClientProvider>,
     );
 
-    await waitFor(() => expect(window.__conduit_debug__?.getAuthState()).toBe("authenticated"));
+    await waitFor(() => expect(window.__conduit_debug__?.getSnapshot().state).toBe("authenticated"));
     await user.click(screen.getByRole("button", { name: /Favorite Article/ }));
 
     await waitFor(() => expect(queryClient.getQueryData(["article", "one"])).toEqual({ article: returned }));

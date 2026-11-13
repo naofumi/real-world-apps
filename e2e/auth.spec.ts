@@ -4,6 +4,7 @@ import { submitLogin } from "./session.js";
 declare global {
   interface Window {
     __conduit_debug__?: {
+      getSnapshot: () => { state: string; user: unknown };
       getAuthState: () => string;
       getToken: () => string | null;
     };
@@ -18,7 +19,7 @@ async function openWithToken(page: Page, token: string) {
 async function authProbe(page: Page) {
   return page.evaluate(() => {
     const debug = window.__conduit_debug__;
-    return { state: debug?.getAuthState(), token: debug?.getToken() ?? null };
+    return { state: debug?.getSnapshot()?.state, token: debug?.getToken() ?? null };
   });
 }
 
