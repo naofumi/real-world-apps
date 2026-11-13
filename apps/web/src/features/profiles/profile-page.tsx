@@ -4,7 +4,7 @@ import { ApiError } from "../../lib/api.js";
 import { useCurrentUser } from "../../lib/auth.js";
 import { api, type ListParams } from "../../lib/client.js";
 import { avatar, useDocumentTitle } from "../../lib/format.js";
-import { ArticleList } from "../articles/article-list.js";
+import { ArticleList, articleListProps } from "../articles/article-list.js";
 import { Pagination } from "../shell/pagination.js";
 import { FollowButton } from "./follow-button.js";
 
@@ -114,7 +114,7 @@ export function ProfilePage() {
                 </li>
               </ul>
             </div>
-            <ArticleList articles={articles.data?.articles} isLoading={articles.isLoading} isError={articles.isError} />
+            <ArticleList {...articleListProps(articles)} />
             <Pagination page={page} total={articles.data?.articlesCount ?? 0} limit={PAGE_SIZE} hrefFor={hrefFor} />
           </div>
         </div>

@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useCurrentUser } from "../../lib/auth.js";
 import { api } from "../../lib/client.js";
 import { useDocumentTitle } from "../../lib/format.js";
-import { ArticleList } from "../articles/article-list.js";
+import { ArticleList, articleListProps } from "../articles/article-list.js";
 import { Pagination } from "../shell/pagination.js";
 
 const PAGE_SIZE = 10;
@@ -101,7 +101,7 @@ export function HomePage() {
                 <Link to="/login">Sign in</Link> to see your feed.
               </div>
             ) : (
-              <ArticleList articles={articles.data?.articles} isLoading={articles.isLoading} isError={articles.isError} />
+              <ArticleList {...articleListProps(articles)} />
             )}
             <Pagination page={page} total={articles.data?.articlesCount ?? 0} limit={PAGE_SIZE} hrefFor={hrefFor} />
           </div>

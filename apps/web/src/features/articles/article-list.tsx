@@ -3,6 +3,21 @@ import { Link } from "react-router-dom";
 import { ArticleMeta } from "./article-meta.js";
 import { FavoriteButton } from "./favorite-button.js";
 
+export type ArticleListProps =
+  | { status: "loading" }
+  | { status: "error" }
+  | { status: "success"; articles: ArticleCard[] };
+
+export function articleListProps(query: {
+  isLoading: boolean;
+  isError: boolean;
+  data?: { articles: ArticleCard[] };
+}): ArticleListProps {
+  if (query.isLoading) return { status: "loading" };
+  if (query.isError) return { status: "error" };
+  return { status: "success", articles: query.data?.articles ?? [] };
+}
+
 export function ArticlePreview({ article }: { article: ArticleCard }) {
   return (
     <div className="article-preview">
@@ -25,19 +40,16 @@ export function ArticlePreview({ article }: { article: ArticleCard }) {
   );
 }
 
-export function ArticleList({
-  articles,
-  isLoading,
-  isError,
-}: {
-  articles: ArticleCard[] | undefined;
-  isLoading: boolean;
-  isError: boolean;
-}) {
-  if (isLoading) return <div className="article-preview">Loading articles...</div>;
-  if (isError) return <div className="article-preview">Could not load articles.</div>;
-  if (!articles || articles.length === 0) {
-    return <div className="article-preview empty-feed-message">No articles are here... yet.</div>;
+export function ArticleList(props: ArticleListProps) {
+  switch (props.status) {
+    case "loading":
+      return <div className="article-preview">Loading articles...</div>;
+    case "error":
+      return <div className="article-preview">Could not load articles.</div>;
+    case "success":
+      if (props.articles.length === 0) {
+        return <div className="article-preview empty-feed-message">No articles are here... yet.</div>;
+      }
+      return props.articles.map((article) => <ArticlePreview key={article.slug} article={article} />);
   }
-  return articles.map((article) => <ArticlePreview key={article.slug} article={article} />);
 }
