@@ -5,7 +5,7 @@ import type {
   Profile,
   User,
 } from "@conduit/contracts";
-import { request } from "./api.js";
+import { requestJson, requestNoContent } from "./api.js";
 
 export type ArticleList = {
   articles: ArticleCard[];
@@ -32,66 +32,66 @@ function queryString(params: ListParams): string {
 
 export const api = {
   register(input: { username: string; email: string; password: string }) {
-    return request<{ user: User }>("/api/users", { method: "POST", body: JSON.stringify({ user: input }) });
+    return requestJson<{ user: User }>("/api/users", { method: "POST", body: JSON.stringify({ user: input }) });
   },
   login(input: { email: string; password: string }) {
-    return request<{ user: User }>("/api/users/login", { method: "POST", body: JSON.stringify({ user: input }) });
+    return requestJson<{ user: User }>("/api/users/login", { method: "POST", body: JSON.stringify({ user: input }) });
   },
   currentUser() {
-    return request<{ user: User }>("/api/user");
+    return requestJson<{ user: User }>("/api/user");
   },
   updateUser(input: { email?: string; username?: string; password?: string; bio?: string; image?: string }) {
-    return request<{ user: User }>("/api/user", { method: "PUT", body: JSON.stringify({ user: input }) });
+    return requestJson<{ user: User }>("/api/user", { method: "PUT", body: JSON.stringify({ user: input }) });
   },
   profile(username: string) {
-    return request<{ profile: Profile }>(`/api/profiles/${encodeURIComponent(username)}`);
+    return requestJson<{ profile: Profile }>(`/api/profiles/${encodeURIComponent(username)}`);
   },
   follow(username: string) {
-    return request<{ profile: Profile }>(`/api/profiles/${encodeURIComponent(username)}/follow`, { method: "POST" });
+    return requestJson<{ profile: Profile }>(`/api/profiles/${encodeURIComponent(username)}/follow`, { method: "POST" });
   },
   unfollow(username: string) {
-    return request<{ profile: Profile }>(`/api/profiles/${encodeURIComponent(username)}/follow`, { method: "DELETE" });
+    return requestJson<{ profile: Profile }>(`/api/profiles/${encodeURIComponent(username)}/follow`, { method: "DELETE" });
   },
   listArticles(params: ListParams) {
-    return request<ArticleList>(`/api/articles?${queryString(params)}`);
+    return requestJson<ArticleList>(`/api/articles?${queryString(params)}`);
   },
   feed(params: Pick<ListParams, "limit" | "offset">) {
-    return request<ArticleList>(`/api/articles/feed?limit=${params.limit}&offset=${params.offset}`);
+    return requestJson<ArticleList>(`/api/articles/feed?limit=${params.limit}&offset=${params.offset}`);
   },
   article(slug: string) {
-    return request<{ article: Article }>(`/api/articles/${encodeURIComponent(slug)}`);
+    return requestJson<{ article: Article }>(`/api/articles/${encodeURIComponent(slug)}`);
   },
   createArticle(input: { title: string; description: string; body: string; tagList: string[] }) {
-    return request<{ article: Article }>("/api/articles", { method: "POST", body: JSON.stringify({ article: input }) });
+    return requestJson<{ article: Article }>("/api/articles", { method: "POST", body: JSON.stringify({ article: input }) });
   },
   updateArticle(slug: string, input: { title: string; description: string; body: string; tagList: string[] }) {
-    return request<{ article: Article }>(`/api/articles/${encodeURIComponent(slug)}`, {
+    return requestJson<{ article: Article }>(`/api/articles/${encodeURIComponent(slug)}`, {
       method: "PUT",
       body: JSON.stringify({ article: input }),
     });
   },
   deleteArticle(slug: string) {
-    return request<void>(`/api/articles/${encodeURIComponent(slug)}`, { method: "DELETE" });
+    return requestNoContent(`/api/articles/${encodeURIComponent(slug)}`, { method: "DELETE" });
   },
   favorite(slug: string) {
-    return request<{ article: Article }>(`/api/articles/${encodeURIComponent(slug)}/favorite`, { method: "POST" });
+    return requestJson<{ article: Article }>(`/api/articles/${encodeURIComponent(slug)}/favorite`, { method: "POST" });
   },
   unfavorite(slug: string) {
-    return request<{ article: Article }>(`/api/articles/${encodeURIComponent(slug)}/favorite`, { method: "DELETE" });
+    return requestJson<{ article: Article }>(`/api/articles/${encodeURIComponent(slug)}/favorite`, { method: "DELETE" });
   },
   comments(slug: string) {
-    return request<{ comments: Comment[] }>(`/api/articles/${encodeURIComponent(slug)}/comments`);
+    return requestJson<{ comments: Comment[] }>(`/api/articles/${encodeURIComponent(slug)}/comments`);
   },
   createComment(slug: string, body: string) {
-    return request<{ comment: Comment }>(`/api/articles/${encodeURIComponent(slug)}/comments`, {
+    return requestJson<{ comment: Comment }>(`/api/articles/${encodeURIComponent(slug)}/comments`, {
       method: "POST",
       body: JSON.stringify({ comment: { body } }),
     });
   },
   deleteComment(slug: string, id: number) {
-    return request<void>(`/api/articles/${encodeURIComponent(slug)}/comments/${id}`, { method: "DELETE" });
+    return requestNoContent(`/api/articles/${encodeURIComponent(slug)}/comments/${id}`, { method: "DELETE" });
   },
   tags() {
-    return request<{ tags: string[] }>("/api/tags");
+    return requestJson<{ tags: string[] }>("/api/tags");
   },
 };

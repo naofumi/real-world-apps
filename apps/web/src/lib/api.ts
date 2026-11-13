@@ -20,14 +20,28 @@ export class ApiError extends Error {
   }
 }
 
-export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function send(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
   if (init.body != null) headers.set("content-type", "application/json");
   const token = getToken();
   if (token) headers.set("authorization", `Token ${token}`);
+  return fetch(path, { ...init, headers });
+}
 
-  const response = await fetch(path, { ...init, headers });
-  if (response.status === 204) return undefined as T;
+export async function requestNoContent(path: string, init: RequestInit = {}): Promise<void> {
+  const response = await send(path, init);
+  if (response.status === 204) return;
+  const payload = (await response.json().catch(() => null)) as { errors?: FieldErrors } | null;
+  if (!response.ok) {
+    throw new ApiError(response.status, payload?.errors ?? { server: ["internal error"] });
+  }
+}
+
+export async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await send(path, init);
+  if (response.status === 204) {
+    throw new ApiError(204, { server: ["expected a json response"] });
+  }
   const payload = (await response.json().catch(() => null)) as { errors?: FieldErrors } | null;
   if (!response.ok) {
     throw new ApiError(response.status, payload?.errors ?? { server: ["internal error"] });
