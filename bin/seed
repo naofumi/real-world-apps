@@ -1,0 +1,138 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+use App\Persistence\Migrator;
+use App\Persistence\PdoFactory;
+use App\Security\Password;
+
+$pdo = PdoFactory::make();
+(new Migrator($pdo))->migrate();
+
+$pdo->exec('DELETE FROM article_tags');
+$pdo->exec('DELETE FROM tags');
+$pdo->exec('DELETE FROM favorites');
+$pdo->exec('DELETE FROM comments');
+$pdo->exec('DELETE FROM articles');
+$pdo->exec('DELETE FROM follows');
+$pdo->exec('DELETE FROM users');
+
+$passwordHash = Password::hash('password');
+
+$insertUser = $pdo->prepare(
+    'INSERT INTO users (email, username, password_hash, bio)
+     VALUES (:email, :username, :password_hash, :bio)'
+);
+
+$users = [
+    ['alice@example.com', 'alice', 'Rails-adjacent PHP explorer'],
+    ['bob@example.com', 'bob', 'Writes about feeds'],
+    ['cara@example.com', 'cara', 'Tags everything'],
+];
+
+$userIds = [];
+foreach ($users as [$email, $username, $bio]) {
+    $insertUser->execute([
+        'email' => $email,
+        'username' => $username,
+        'password_hash' => $passwordHash,
+        'bio' => $bio,
+    ]);
+    $userIds[$username] = (int) $pdo->lastInsertId();
+}
+
+$insertArticle = $pdo->prepare(
+    'INSERT INTO articles (user_id, title, description, body, slug, favorites_count, created_at, updated_at)
+     VALUES (:user_id, :title, :description, :body, :slug, :favorites_count, :created_at, :updated_at)'
+);
+
+$articles = [
+    [
+        'user' => 'alice',
+        'title' => 'A vanilla PHP stack',
+        'description' => 'No framework, PDO, plain views.',
+        'body' => "Front controller, homemade router, prepared statements.\n\nEnough for Conduit.",
+        'slug' => 'a-vanilla-php-stack',
+        'favorites_count' => 1,
+        'created_at' => '2026-11-01 10:00:00',
+    ],
+    [
+        'user' => 'bob',
+        'title' => 'Global feed',
+        'description' => 'Newest articles first.',
+        'body' => 'Tag filters can narrow the same list later.',
+        'slug' => 'global-feed',
+        'favorites_count' => 0,
+        'created_at' => '2026-11-02 12:00:00',
+    ],
+    [
+        'user' => 'cara',
+        'title' => 'Following people',
+        'description' => 'Your feed is the articles of people you follow.',
+        'body' => 'You cannot follow yourself. Hide the button on your own profile.',
+        'slug' => 'following-people',
+        'favorites_count' => 0,
+        'created_at' => '2026-11-03 09:30:00',
+    ],
+];
+
+$articleIds = [];
+foreach ($articles as $article) {
+    $insertArticle->execute([
+        'user_id' => $userIds[$article['user']],
+        'title' => $article['title'],
+        'description' => $article['description'],
+        'body' => $article['body'],
+        'slug' => $article['slug'],
+        'favorites_count' => $article['favorites_count'],
+        'created_at' => $article['created_at'],
+        'updated_at' => $article['created_at'],
+    ]);
+    $articleIds[$article['slug']] = (int) $pdo->lastInsertId();
+}
+
+$insertTag = $pdo->prepare('INSERT INTO tags (name) VALUES (:name)');
+foreach (['php', 'sqlite', 'dragons'] as $name) {
+    $insertTag->execute(['name' => $name]);
+}
+
+$tagIds = [];
+$tags = $pdo->query('SELECT id, name FROM tags')->fetchAll();
+foreach ($tags as $tag) {
+    $tagIds[$tag['name']] = (int) $tag['id'];
+}
+
+$link = $pdo->prepare(
+    'INSERT INTO article_tags (article_id, tag_id) VALUES (:article_id, :tag_id)'
+);
+$link->execute(['article_id' => $articleIds['a-vanilla-php-stack'], 'tag_id' => $tagIds['php']]);
+$link->execute(['article_id' => $articleIds['a-vanilla-php-stack'], 'tag_id' => $tagIds['sqlite']]);
+$link->execute(['article_id' => $articleIds['global-feed'], 'tag_id' => $tagIds['dragons']]);
+$link->execute(['article_id' => $articleIds['following-people'], 'tag_id' => $tagIds['php']]);
+
+$pdo->prepare(
+    'INSERT INTO favorites (user_id, article_id) VALUES (:user_id, :article_id)'
+)->execute([
+    'user_id' => $userIds['bob'],
+    'article_id' => $articleIds['a-vanilla-php-stack'],
+]);
+
+$pdo->prepare(
+    'INSERT INTO follows (follower_id, followed_id) VALUES (:follower_id, :followed_id)'
+)->execute([
+    'follower_id' => $userIds['bob'],
+    'followed_id' => $userIds['alice'],
+]);
+
+$pdo->prepare(
+    'INSERT INTO comments (article_id, user_id, body) VALUES (:article_id, :user_id, :body)'
+)->execute([
+    'article_id' => $articleIds['global-feed'],
+    'user_id' => $userIds['alice'],
+    'body' => 'His name was my name too.',
+]);
+
+fwrite(STDOUT, "Seeded users (password `password`): alice@example.com, bob@example.com, cara@example.com\n");
