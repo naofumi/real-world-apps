@@ -2,7 +2,7 @@ class ArticlesController < ApplicationController
   allow_unauthenticated_access only: %i[ index show ]
 
   before_action :set_article, only: %i[ show edit update destroy ]
-  before_action :require_author, only: %i[ edit update destroy ]
+  before_action :authorize_article!, only: %i[ edit update destroy ]
 
   def index
     articles = listed_articles
@@ -52,8 +52,9 @@ class ArticlesController < ApplicationController
       @article = Article.find_by!(slug: params[:id])
     end
 
-    def require_author
-      redirect_to @article, alert: "You can only change your own articles." unless @article.authored_by?(Current.user)
+    def authorize_article!
+      action = action_name == "destroy" ? :destroy : :update
+      authorize_or_redirect(action, @article, to: @article, alert: "You can only change your own articles.")
     end
 
     def article_params

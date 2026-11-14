@@ -1,4 +1,4 @@
-<% if authenticated? && user == Current.user %>
+<% if can?(:update, user) %>
   <%= link_to edit_settings_path, class: "btn btn-sm btn-outline-secondary" do %>
     <i class="ion-gear-a"></i>&nbsp;Edit Profile Settings
   <% end %>

@@ -15,13 +15,10 @@ class CommentsController < ApplicationController
 
   def destroy
     comment = @article.comments.find(params[:id])
+    return unless authorize_or_redirect(:destroy, comment, to: @article, alert: "You can only delete your own comments.", status: :see_other)
 
-    if comment.authored_by?(Current.user)
-      comment.destroy!
-      redirect_to @article, notice: "Comment deleted.", status: :see_other
-    else
-      redirect_to @article, alert: "You can only delete your own comments.", status: :see_other
-    end
+    comment.destroy!
+    redirect_to @article, notice: "Comment deleted.", status: :see_other
   end
 
   private

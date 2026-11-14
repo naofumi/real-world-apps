@@ -68,3 +68,5 @@ end
 
 # GitHub-flavored Markdown for article bodies. Output is sanitized in the view.
 gem "commonmarker", "~> 2.10"
+
+gem "cancancan"

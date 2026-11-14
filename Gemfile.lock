@@ -91,6 +91,7 @@ GEM
     bundler-audit (0.9.3)
       bundler (>= 1.2.0)
       thor (~> 1.0)
+    cancancan (3.7.0)
     capybara (3.40.0)
       addressable
       matrix
@@ -389,6 +390,7 @@ DEPENDENCIES
   bootsnap
   brakeman
   bundler-audit
+  cancancan
   capybara
   capybara-lockstep (~> 2.4)
   commonmarker (~> 2.10)
@@ -437,6 +439,7 @@ CHECKSUMS
   builder (3.3.0) sha256=497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f
   bundler (4.0.11) sha256=5bcec0fb78302e48d02ee46f10ee6e6942be647ba5b44a6d1ddfda9a240ce785
   bundler-audit (0.9.3) sha256=81c8766c71e47d0d28a0f98c7eed028539f21a6ea3cd8f685eb6f42333c9b4e9
+  cancancan (3.7.0) sha256=6dfcc6056cc3d8205446bcb368f50913b6aceec2191b3f4d84e82b5607013722
   capybara (3.40.0) sha256=42dba720578ea1ca65fd7a41d163dd368502c191804558f6e0f71b391054aeef
   capybara-lockstep (2.4.0) sha256=a95893430c5bb7d7802eff37703425a48820478665e29a62854605990496ac12
   commonmarker (2.10.1-aarch64-linux) sha256=3ab9e7027d2350364bdc541680cc28e21011b2950abf7d08ac29093fa691bdc3

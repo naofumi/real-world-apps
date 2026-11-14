@@ -8,7 +8,7 @@
     <% end %>
     <%= link_to comment.user.username, user_path(comment.user), class: "comment-author" %>
     <span class="date-posted"><%= posted_on comment.created_at %></span>
-    <% if comment.authored_by?(Current.user) %>
+    <% if can?(:destroy, comment) %>
       <span class="mod-options">
         <%= button_to article_comment_path(comment.article, comment), method: :delete, data: {testid: "delete_comment"}, aria: { label: "Delete comment" } do %>
           <i class="ion-trash-a"></i>
