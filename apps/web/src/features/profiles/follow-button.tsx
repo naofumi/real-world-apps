@@ -1,13 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useCurrentUser } from "../../lib/auth.js";
 import { api } from "../../lib/client.js";
 import { loginLocationState } from "../../lib/login-state.js";
 
-export function FollowButton({ username, following }: { username: string; following: boolean }) {
+export function FollowButton({
+  username,
+  following,
+  canFollow,
+}: {
+  username: string;
+  following: boolean;
+  canFollow: boolean;
+}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const me = useCurrentUser();
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: () => (following ? api.unfollow(username) : api.follow(username)),
@@ -25,7 +31,7 @@ export function FollowButton({ username, following }: { username: string; follow
       className={`btn btn-sm action-btn ${following ? "btn-secondary" : "btn-outline-secondary"}`}
       disabled={mutation.isPending}
       onClick={() => {
-        if (!me.data) {
+        if (!canFollow) {
           navigate("/login", { state: loginLocationState(location.pathname, location.search) });
           return;
         }

@@ -177,6 +177,45 @@ describe("RealWorld API contract", { concurrency: 1 }, () => {
     assert.equal(missing.json.errors.article[0], "not found");
   });
 
+  test("embeds viewer permissions on articles, profiles, and comments", async () => {
+    const api = setup();
+    const owner = await api.call("POST", "/api/users", {
+      user: { username: "perm_owner", email: "perm_owner@test.com", password: "password123" },
+    }, false);
+    const other = await api.call("POST", "/api/users", {
+      user: { username: "perm_other", email: "perm_other@test.com", password: "password123" },
+    }, false);
+    api.use(owner.json.user.token);
+    const created = await api.call("POST", "/api/articles", {
+      article: { title: "Perms", description: "d", body: "b" },
+    });
+    const slug = created.json.article.slug as string;
+    assert.deepEqual(created.json.article.permissions, { update: true, delete: true, favorite: true });
+    assert.deepEqual(created.json.article.author.permissions, { follow: false, update: true });
+
+    const asGuest = await api.call("GET", `/api/articles/${slug}`, undefined, false);
+    assert.deepEqual(asGuest.json.article.permissions, { update: false, delete: false, favorite: false });
+    assert.deepEqual(asGuest.json.article.author.permissions, { follow: false, update: false });
+
+    api.use(other.json.user.token);
+    const asOther = await api.call("GET", `/api/articles/${slug}`);
+    assert.deepEqual(asOther.json.article.permissions, { update: false, delete: false, favorite: true });
+    assert.deepEqual(asOther.json.article.author.permissions, { follow: true, update: false });
+
+    const profile = await api.call("GET", "/api/profiles/perm_owner");
+    assert.deepEqual(profile.json.profile.permissions, { follow: true, update: false });
+
+    api.use(owner.json.user.token);
+    const ownProfile = await api.call("GET", "/api/profiles/perm_owner");
+    assert.deepEqual(ownProfile.json.profile.permissions, { follow: false, update: true });
+
+    const comment = await api.call("POST", `/api/articles/${slug}/comments`, { comment: { body: "hi" } });
+    assert.deepEqual(comment.json.comment.permissions, { delete: true });
+    api.use(other.json.user.token);
+    const comments = await api.call("GET", `/api/articles/${slug}/comments`);
+    assert.deepEqual(comments.json.comments[0].permissions, { delete: false });
+  });
+
   test("rejects article writes without ownership", async () => {
     const api = setup();
     const first = await api.call("POST", "/api/users", {

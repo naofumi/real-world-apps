@@ -1,10 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useMatch, useParams, useSearchParams } from "react-router-dom";
 import { ApiError } from "../../lib/api.js";
-import { useAuth } from "../../lib/auth.js";
 import { api, type ListParams } from "../../lib/client.js";
 import { avatar, useDocumentTitle } from "../../lib/format.js";
-import { followState, viewerRole } from "../../lib/viewer-role.js";
 import { ArticleList, articleListProps } from "../articles/article-list.js";
 import { Pagination } from "../shell/pagination.js";
 import { FollowButton } from "./follow-button.js";
@@ -43,7 +41,6 @@ export function ProfilePage() {
   const tab = profileArticlesTab(username, favoritedRoute);
   const [searchParams] = useSearchParams();
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
-  const auth = useAuth();
   const profile = useQuery({
     queryKey: ["profile", username],
     queryFn: () => api.profile(username),
@@ -62,7 +59,6 @@ export function ProfilePage() {
   }
   const person = profile.data?.profile;
   if (!person) return null;
-  const role = viewerRole(auth, person.username, person.following);
 
   function hrefFor(nextPage: number) {
     const params = new URLSearchParams();
@@ -81,12 +77,16 @@ export function ProfilePage() {
               <img className="user-img" src={avatar(person.image)} alt="" />
               <h4>{person.username}</h4>
               <p>{person.bio}</p>
-              {role.kind === "owner" ? (
+              {person.permissions.update ? (
                 <Link className="btn btn-sm btn-outline-secondary action-btn" to="/settings">
                   <i className="ion-gear-a" /> Edit Profile Settings
                 </Link>
               ) : (
-                <FollowButton username={person.username} following={followState(role)} />
+                <FollowButton
+                  username={person.username}
+                  following={person.following}
+                  canFollow={person.permissions.follow}
+                />
               )}
             </div>
           </div>

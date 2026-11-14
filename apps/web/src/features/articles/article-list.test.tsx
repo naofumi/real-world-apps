@@ -24,7 +24,14 @@ const sample: ArticleCard = {
   updatedAt: "2020-01-01T00:00:00.000Z",
   favorited: false,
   favoritesCount: 0,
-  author: { username: "demo", bio: null, image: null, following: false },
+  author: {
+    username: "demo",
+    bio: null,
+    image: null,
+    following: false,
+    permissions: { follow: false, update: true },
+  },
+  permissions: { update: true, delete: true, favorite: true },
 };
 
 describe("ArticleList", () => {

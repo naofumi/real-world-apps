@@ -1,8 +1,24 @@
+export type ProfilePermissions = {
+  follow: boolean;
+  update: boolean;
+};
+
+export type ArticlePermissions = {
+  update: boolean;
+  delete: boolean;
+  favorite: boolean;
+};
+
+export type CommentPermissions = {
+  delete: boolean;
+};
+
 export type Profile = {
   username: string;
   bio: string | null;
   image: string | null;
   following: boolean;
+  permissions: ProfilePermissions;
 };
 
 export type User = {
@@ -24,6 +40,7 @@ export type Article = {
   favorited: boolean;
   favoritesCount: number;
   author: Profile;
+  permissions: ArticlePermissions;
 };
 
 export type ArticleCard = Omit<Article, "body">;
@@ -34,6 +51,7 @@ export type Comment = {
   updatedAt: string;
   body: string;
   author: Profile;
+  permissions: CommentPermissions;
 };
 
 export type FieldErrors = Record<string, string[]>;

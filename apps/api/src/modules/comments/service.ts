@@ -1,13 +1,15 @@
 import type { Comment } from "@conduit/contracts";
 import { comments, users, type Db } from "@conduit/db";
 import { and, asc, eq } from "drizzle-orm";
-import { AppError } from "../../shared/errors.js";
-import { nowIso } from "../../shared/clock.js";
 import { followingSql } from "../../shared/author-sql.js";
+import { nowIso } from "../../shared/clock.js";
+import { AppError } from "../../shared/errors.js";
+import { assertCommentDelete, commentPermissions, profilePermissions } from "../../shared/permissions.js";
 import { findArticleRef } from "../articles/queries.js";
 
 type CommentRow = {
   id: number;
+  authorId: number;
   body: string;
   createdAt: string;
   updatedAt: string;
@@ -17,7 +19,7 @@ type CommentRow = {
   following: number;
 };
 
-function present(row: CommentRow): Comment {
+function present(row: CommentRow, viewerId: number | null): Comment {
   return {
     id: row.id,
     body: row.body,
@@ -28,7 +30,9 @@ function present(row: CommentRow): Comment {
       bio: row.authorBio,
       image: row.authorImage,
       following: Number(row.following) === 1,
+      permissions: profilePermissions(viewerId, row.authorId),
     },
+    permissions: commentPermissions(viewerId, row.authorId),
   };
 }
 
@@ -36,6 +40,7 @@ function commentQuery(db: Db, viewerId: number | null) {
   return db
     .select({
       id: comments.id,
+      authorId: comments.authorId,
       body: comments.body,
       createdAt: comments.createdAt,
       updatedAt: comments.updatedAt,
@@ -55,7 +60,7 @@ export function listComments(db: Db, slug: string, viewerId: number | null): Com
     .where(eq(comments.articleId, article.id))
     .orderBy(asc(comments.createdAt), asc(comments.id))
     .all()
-    .map(present);
+    .map((row) => present(row, viewerId));
 }
 
 export function createComment(db: Db, slug: string, authorId: number, body: string): Comment {
@@ -76,7 +81,7 @@ export function createComment(db: Db, slug: string, authorId: number, body: stri
   if (!row) throw new Error("Failed to insert comment");
   const created = commentQuery(db, authorId).where(eq(comments.id, row.id)).get();
   if (!created) throw new Error("Failed to load comment");
-  return present(created);
+  return present(created, authorId);
 }
 
 export function deleteComment(db: Db, slug: string, commentId: number, userId: number) {
@@ -88,6 +93,6 @@ export function deleteComment(db: Db, slug: string, commentId: number, userId: n
     .where(and(eq(comments.id, commentId), eq(comments.articleId, article.id)))
     .get();
   if (!comment) throw new AppError("not_found", { comment: ["not found"] });
-  if (comment.authorId !== userId) throw new AppError("forbidden", { comment: ["forbidden"] });
+  assertCommentDelete(userId, comment.authorId);
   db.delete(comments).where(eq(comments.id, comment.id)).run();
 }

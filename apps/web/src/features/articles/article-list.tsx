@@ -26,6 +26,7 @@ export function ArticlePreview({ article }: { article: ArticleCard }) {
           slug={article.slug}
           favorited={article.favorited}
           favoritesCount={article.favoritesCount}
+          canFavorite={article.permissions.favorite}
           variant="preview"
         />
       </ArticleMeta>

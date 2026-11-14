@@ -1,7 +1,6 @@
 import type { Article, ArticleCard } from "@conduit/contracts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useCurrentUser } from "../../lib/auth.js";
 import { api, type ArticleList } from "../../lib/client.js";
 import { loginLocationState } from "../../lib/login-state.js";
 
@@ -20,13 +19,14 @@ export function FavoriteButton({
   slug,
   favorited,
   favoritesCount,
+  canFavorite,
   variant,
 }: Pick<ArticleCard, "slug" | "favorited" | "favoritesCount"> & {
+  canFavorite: boolean;
   variant: "preview" | "detail";
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const me = useCurrentUser();
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: () => (favorited ? api.unfavorite(slug) : api.favorite(slug)),
@@ -43,7 +43,7 @@ export function FavoriteButton({
   });
 
   function onClick() {
-    if (!me.data) {
+    if (!canFavorite) {
       navigate("/login", { state: loginLocationState(location.pathname, location.search) });
       return;
     }
