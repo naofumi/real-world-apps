@@ -1,9 +1,10 @@
 import { Hono } from "hono";
-import { findArticleRef } from "../articles/queries.js";
 import type { AppEnv } from "../../http/context.js";
 import { requireViewer, viewerId } from "../../http/context.js";
-import { parseNewComment } from "../../http/parse.js";
+import { newCommentJson } from "../../http/schemas.js";
+import { zJson } from "../../http/validate.js";
 import { AppError } from "../../shared/errors.js";
+import { findArticleRef } from "../articles/queries.js";
 import { createComment, deleteComment, listComments } from "./service.js";
 
 export function registerCommentRoutes(api: Hono<AppEnv>) {
@@ -12,9 +13,9 @@ export function registerCommentRoutes(api: Hono<AppEnv>) {
     return c.json({ comments });
   });
 
-  api.post("/articles/:slug/comments", async (c) => {
+  api.post("/articles/:slug/comments", zJson(newCommentJson), (c) => {
     const viewer = requireViewer(c);
-    const input = await parseNewComment(c);
+    const input = c.req.valid("json");
     const comment = createComment(c.get("db"), c.req.param("slug"), viewer.id, input.body);
     return c.json({ comment }, 201);
   });

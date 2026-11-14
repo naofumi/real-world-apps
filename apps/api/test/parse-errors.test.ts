@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { Hono } from "hono";
-import { parseListQuery, parseLogin, parseNewComment, parseRegister } from "../src/http/parse.js";
+import { listQuery, loginJson, newCommentJson, registerJson } from "../src/http/schemas.js";
+import { zJson, zQuery } from "../src/http/validate.js";
 import { AppError } from "../src/shared/errors.js";
 
 describe("AppError status", () => {
@@ -14,11 +15,15 @@ describe("AppError status", () => {
   });
 });
 
-describe("parse boundary returns", () => {
-  test("parseListQuery returns filters and pagination without a feed flag", async () => {
+describe("Hono Zod validators", () => {
+  test("zQuery returns filters and pagination without a feed flag", async () => {
     const app = new Hono();
-    app.get("/q", (c) => {
-      const query = parseListQuery(c);
+    app.onError((error, c) => {
+      if (error instanceof AppError) return c.json({ errors: error.errors }, error.status);
+      throw error;
+    });
+    app.get("/q", zQuery(listQuery), (c) => {
+      const query = c.req.valid("query");
       return c.json({
         query,
         keys: Object.keys(query).sort(),
@@ -38,11 +43,15 @@ describe("parse boundary returns", () => {
     });
   });
 
-  test("required-field parsers return concrete strings after validation", async () => {
+  test("zJson returns concrete values after validation", async () => {
     const app = new Hono();
-    app.post("/register", async (c) => c.json(await parseRegister(c)));
-    app.post("/login", async (c) => c.json(await parseLogin(c)));
-    app.post("/comment", async (c) => c.json(await parseNewComment(c)));
+    app.onError((error, c) => {
+      if (error instanceof AppError) return c.json({ errors: error.errors }, error.status);
+      throw error;
+    });
+    app.post("/register", zJson(registerJson), (c) => c.json(c.req.valid("json")));
+    app.post("/login", zJson(loginJson), (c) => c.json(c.req.valid("json")));
+    app.post("/comment", zJson(newCommentJson), (c) => c.json(c.req.valid("json")));
 
     const registered = await app.request("/register", {
       method: "POST",
@@ -80,13 +89,13 @@ describe("parse boundary returns", () => {
     assert.deepEqual(await comment.json(), { body: "Nice post!" });
   });
 
-  test("required-field parsers reject blanks with validation AppError", async () => {
+  test("zJson rejects blanks with validation AppError", async () => {
     const app = new Hono();
     app.onError((error, c) => {
       if (error instanceof AppError) return c.json({ errors: error.errors, status: error.status }, 200);
       throw error;
     });
-    app.post("/register", async (c) => c.json(await parseRegister(c)));
+    app.post("/register", zJson(registerJson), (c) => c.json(c.req.valid("json")));
 
     const blank = await app.request("/register", {
       method: "POST",

@@ -1,27 +1,28 @@
 import { Hono } from "hono";
 import type { AppEnv } from "../../http/context.js";
 import { requireViewer, viewerId } from "../../http/context.js";
-import { parseListQuery, parseNewArticle, parseUpdateArticle } from "../../http/parse.js";
+import { listQuery, newArticleJson, updateArticleJson } from "../../http/schemas.js";
+import { zJson, zQuery } from "../../http/validate.js";
 import { getArticle, listArticles, listTagNames } from "./queries.js";
 import { createArticle, favoriteArticle, removeArticle, unfavoriteArticle, updateArticle } from "./service.js";
 
 export function registerArticleRoutes(api: Hono<AppEnv>) {
-  api.get("/articles/feed", (c) => {
+  api.get("/articles/feed", zQuery(listQuery), (c) => {
     const viewer = requireViewer(c);
-    const query = parseListQuery(c);
+    const query = c.req.valid("query");
     const page = listArticles(c.get("db"), { ...query, feedUserId: viewer.id }, viewer.id);
     return c.json(page);
   });
 
-  api.get("/articles", (c) => {
-    const query = parseListQuery(c);
+  api.get("/articles", zQuery(listQuery), (c) => {
+    const query = c.req.valid("query");
     const page = listArticles(c.get("db"), query, viewerId(c));
     return c.json(page);
   });
 
-  api.post("/articles", async (c) => {
+  api.post("/articles", zJson(newArticleJson), (c) => {
     const viewer = requireViewer(c);
-    const input = await parseNewArticle(c);
+    const input = c.req.valid("json");
     const article = createArticle(c.get("db"), viewer.id, input);
     return c.json({ article }, 201);
   });
@@ -31,9 +32,9 @@ export function registerArticleRoutes(api: Hono<AppEnv>) {
     return c.json({ article });
   });
 
-  api.put("/articles/:slug", async (c) => {
+  api.put("/articles/:slug", zJson(updateArticleJson), (c) => {
     const viewer = requireViewer(c);
-    const input = await parseUpdateArticle(c);
+    const input = c.req.valid("json");
     const article = updateArticle(c.get("db"), c.req.param("slug"), viewer.id, input);
     return c.json({ article });
   });

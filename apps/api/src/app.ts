@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import type { Db } from "@conduit/db";
 import { getAccount } from "./modules/identity/service.js";
 import { readUserId } from "./modules/identity/token.js";
@@ -33,6 +34,13 @@ export function createApp(db: Db, options: AppOptions = {}) {
 
   app.onError((error, c) => {
     if (error instanceof AppError) return c.json({ errors: error.errors }, error.status);
+    if (
+      error instanceof HTTPException &&
+      error.status === 400 &&
+      error.message === "Malformed JSON in request body"
+    ) {
+      return c.json({ errors: { body: ["is invalid"] } }, 422);
+    }
     console.error(error);
     return c.json({ errors: { server: ["internal error"] } }, 500);
   });
