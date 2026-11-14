@@ -54,6 +54,19 @@ bin/              # migrate, seed, dev
 
 ## Tests
 
+Repository PHPUnit (in-memory SQLite):
+
 ```bash
 composer test
 ```
+
+Playwright E2E against a fresh `storage/e2e.sqlite3` and `php -S` on port 8081:
+
+```bash
+npm install
+npx playwright install chromium
+npm run test:e2e
+```
+
+E2E covers auth, feeds/tags, article publish, favorite, follow, and comments. Page scripts stay unextracted — flows are asserted in the browser instead of a custom request harness.
+
