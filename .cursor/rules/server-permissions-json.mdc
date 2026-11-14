@@ -1,0 +1,30 @@
+---
+description: Render resource chrome from API permissions, not client ownership checks
+globs: apps/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Server permissions in JSON
+
+Authorization for a resource lives on the server. JSON carries the viewer's capabilities. The SPA reads those fields.
+
+```ts
+// BAD — client re-derives policy
+const owned = me?.username === article.author.username;
+
+// GOOD — use the payload
+article.permissions.update
+article.permissions.delete
+article.permissions.favorite
+profile.permissions.follow
+profile.permissions.update
+comment.permissions.delete
+```
+
+Keep resource state (`favorited`, `following`) separate from permissions (may this viewer call the action).
+
+Do not bring back `ViewerRole`-style client role models for Edit vs Follow. That pattern was transitional.
+
+Session and routing stay separate (`RequireAuth`, nav "New Post"). Those are authentication, not resource policy.
+
+Extend `@conduit/contracts` when adding permission fields. Do not invent ad-hoc shapes only in the UI.

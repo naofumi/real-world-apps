@@ -1,0 +1,18 @@
+---
+description: Prefer Playwright for page flows; keep Vitest for real unit seams
+globs: "**/*.{test,spec}.{ts,tsx}"
+alwaysApply: false
+---
+
+# Testing layers
+
+For full page flows that need a heavy mocked `api` client in Vitest, prefer Playwright E2E against the real app.
+
+Keep Vitest for genuine unit or component seams (pure helpers, small presenters, focused hooks).
+
+API tests:
+
+- Contract tests cover RealWorld HTTP and permission shapes.
+- Module tests cover queries, writes, and validators.
+
+Do not rebuild the whole page a second time under jsdom with a mocked client when an E2E case already proves the flow.
