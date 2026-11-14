@@ -18,11 +18,12 @@ final class UserRepositoryTest extends TestCase
         (new Migrator($pdo))->migrate();
         $users = new UserRepository($pdo);
 
-        $id = $users->create('alice@example.com', 'alice', Password::hash('password'));
-        $found = $users->findByEmail('ALICE@example.com');
+        $result = $users->create('alice@example.com', 'alice', Password::hash('password'));
+        self::assertTrue($result['ok']);
 
+        $found = $users->findByEmail('ALICE@example.com');
         self::assertNotNull($found);
-        self::assertSame($id, (int) $found['id']);
+        self::assertSame($result['id'], (int) $found['id']);
         self::assertSame('alice', $found['username']);
         self::assertTrue(Password::verify('password', (string) $found['password_hash']));
     }
