@@ -15,7 +15,7 @@ export type AppOptions = {
   jwtSecret?: string;
 };
 
-function viewerFromHeader(header: string | undefined, db: Db, secret: string) {
+function accountFromHeader(header: string | undefined, db: Db, secret: string) {
   if (header == null || header === "") return null;
   const match = /^Token (.+)$/.exec(header);
   const token = match?.[1]?.trim();
@@ -40,7 +40,7 @@ export function createApp(db: Db, options: AppOptions = {}) {
   app.use("/api/*", async (c, next) => {
     c.set("db", db);
     c.set("jwtSecret", jwtSecret);
-    c.set("viewer", viewerFromHeader(c.req.header("Authorization"), db, jwtSecret));
+    c.set("viewer", accountFromHeader(c.req.header("Authorization"), db, jwtSecret));
     await next();
     const contentType = c.res.headers.get("content-type");
     if (contentType?.startsWith("application/json") && !contentType.includes("charset")) {
