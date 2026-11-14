@@ -1,8 +1,8 @@
-# RealWorld — PHP (no framework)
+# RealWorld — PHP page scripts
 
-A [RealWorld](https://realworld-docs.netlify.app/) (Conduit) blogging app built with **PHP 8.4**, **PDO + SQLite**, and **plain PHP views**. Cookie sessions, server-rendered pages, no Laravel/Symfony/Slim.
+A [RealWorld](https://realworld-docs.netlify.app/) (Conduit) blogging app in **PHP 8.4** with **no framework and no app router**. Each URL is a real PHP file under `public/`; the web server does the routing. Data access is **PDO + SQLite**.
 
-Companions in this Project:
+Companions:
 
 - Rails ERB — `real-world-app-rails-erb`
 - React + Hono — `real-world-app-react-hono`
@@ -11,18 +11,18 @@ Companions in this Project:
 
 | Piece | Choice |
 | --- | --- |
-| PHP | 8.4 (see `.php-version`) |
-| Framework | None |
-| HTTP | Front controller (`public/index.php`) + homemade router |
+| PHP | 8.4 (`.php-version`) |
+| Routing | Page scripts (`/login.php`, `/article.php?slug=…`) |
+| Shared boot | `includes/bootstrap.php` |
 | DB | SQLite via PDO (`storage/conduit.sqlite3`) |
-| Templates | Plain PHP views |
-| Auth | Cookie sessions, `password_hash` / `password_verify`, CSRF tokens |
-| Markdown | `league/commonmark` (ready for article bodies) |
-| Autoload / tests | Composer PSR-4, PHPUnit |
+| Templates | `include` header/footer + page HTML |
+| Auth | Cookie sessions, `password_hash`, CSRF |
+| Markdown | `league/commonmark` |
+| Tests | PHPUnit against repositories |
 
 ## Setup
 
-Needs [Composer](https://getcomposer.org/) **2.7+** (older Composer 2.4.x floods PHP 8.4 with deprecation notices from Composer itself). Check with `composer --version`; upgrade with `composer self-update`.
+Needs [Composer](https://getcomposer.org/) **2.7+** (`composer --version`; upgrade with `composer self-update`).
 
 ```bash
 composer install
@@ -36,16 +36,24 @@ php bin/seed
 php bin/dev
 ```
 
-App: [http://127.0.0.1:8080](http://127.0.0.1:8080)
+App: [http://127.0.0.1:8080](http://127.0.0.1:8080) — built-in server serves files in `public/` directly (no rewrite router).
 
-Seeded demo users (password `password`): `alice@example.com`, `bob@example.com`, `cara@example.com`.
+Seeded users (password `password`): `alice@example.com`, `bob@example.com`, `cara@example.com`.
+
+## Layout
+
+```text
+public/           # web root — one script per action/page
+includes/         # bootstrap, header, footer, partials
+src/Persistence/  # PDO repositories
+src/Security/     # session, csrf, password
+src/Support/      # slug, markdown, paths
+sql/              # schema
+bin/              # migrate, seed, dev
+```
 
 ## Tests
 
 ```bash
 composer test
 ```
-
-## Current surface
-
-Scaffold covers home (global feed), sign-in, and sign-out. Article detail, editor, profiles, favorites, follows, tags, and comments are next.

@@ -1,0 +1,40 @@
+<?php
+
+declare(strict_types=1);
+
+require dirname(__DIR__) . '/includes/bootstrap.php';
+
+$username = trim(query('username'));
+$profile = $username !== '' ? $users->findByUsername($username) : null;
+if ($profile === null) {
+    http_response_code(404);
+    echo 'Profile not found.';
+    exit;
+}
+
+$viewer = viewer($session, $users);
+$csrfToken = $csrf->token();
+$flash = $session->pullFlash('notice');
+$alert = $session->pullFlash('alert');
+
+$following = $viewer !== null && $users->isFollowing((int) $viewer['id'], (int) $profile['id']);
+$isSelf = $viewer !== null && (int) $viewer['id'] === (int) $profile['id'];
+$page = max(1, (int) query('page', '1'));
+$perPage = 10;
+$offset = ($page - 1) * $perPage;
+$feedArticles = $articles->listByAuthor((int) $profile['id'], $perPage, $offset);
+$tab = 'articles';
+
+$title = '@' . $profile['username'] . ' — Conduit';
+require dirname(__DIR__) . '/includes/header.php';
+require dirname(__DIR__) . '/includes/profile_shell.php';
+
+foreach ($feedArticles as $article) {
+    require dirname(__DIR__) . '/includes/article_preview.php';
+}
+if ($feedArticles === []) {
+    echo '<p class="empty">No articles yet.</p>';
+}
+?>
+</main>
+<?php require dirname(__DIR__) . '/includes/footer.php'; ?>
