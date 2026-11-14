@@ -2,7 +2,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../../lib/api.js";
-import { useCurrentUser } from "../../lib/auth.js";
 import { api } from "../../lib/client.js";
 import { useDocumentTitle } from "../../lib/format.js";
 import { ErrorList } from "../shell/error-list.js";
@@ -22,7 +21,6 @@ const emptyDraft: Draft = { title: "", description: "", body: "", tagList: [] };
 
 export function EditorPage() {
   const { slug } = useParams();
-  const me = useCurrentUser();
   const article = useQuery({
     queryKey: ["article", slug],
     enabled: Boolean(slug),
@@ -45,7 +43,7 @@ export function EditorPage() {
     return <div className="editor-page container page">{missing ? "Article not found." : "Could not load the article."}</div>;
   }
 
-  if (article.data && me.data && article.data.article.author.username !== me.data.username) {
+  if (article.data && !article.data.article.permissions.update) {
     return <div className="editor-page container page">You can only edit your own articles.</div>;
   }
 

@@ -1,7 +1,8 @@
 import { articleTags, articles, favorites, tags, type Db } from "@conduit/db";
 import { and, eq, notExists, sql } from "drizzle-orm";
-import { AppError } from "../../shared/errors.js";
 import { nextIso, nowIso } from "../../shared/clock.js";
+import { AppError } from "../../shared/errors.js";
+import { assertArticleDelete, assertArticleUpdate } from "../../shared/permissions.js";
 import { findArticleRef, getArticle } from "./queries.js";
 import { slugify } from "./slug.js";
 
@@ -86,7 +87,7 @@ export function createArticle(db: Db, authorId: number, input: ArticleInput) {
 
 export function updateArticle(db: Db, slug: string, userId: number, input: ArticleUpdate) {
   const current = requireArticle(db, slug);
-  if (current.authorId !== userId) throw new AppError("forbidden", { article: ["forbidden"] });
+  assertArticleUpdate(userId, current.authorId);
 
   const nextSlug = db.transaction((tx) => {
     const connection = tx as unknown as Db;
@@ -110,7 +111,7 @@ export function updateArticle(db: Db, slug: string, userId: number, input: Artic
 
 export function removeArticle(db: Db, slug: string, userId: number) {
   const current = requireArticle(db, slug);
-  if (current.authorId !== userId) throw new AppError("forbidden", { article: ["forbidden"] });
+  assertArticleDelete(userId, current.authorId);
   db.transaction((tx) => {
     const connection = tx as unknown as Db;
     connection.delete(articles).where(eq(articles.id, current.id)).run();

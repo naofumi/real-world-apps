@@ -2,8 +2,9 @@ import type { Article, ArticleCard } from "@conduit/contracts";
 import { articleTags, articles, favorites, follows, tags, users, type Db } from "@conduit/db";
 import { alias } from "drizzle-orm/sqlite-core";
 import { and, asc, desc, eq, exists, inArray, sql, type SQL } from "drizzle-orm";
-import { AppError } from "../../shared/errors.js";
 import { followingSql } from "../../shared/author-sql.js";
+import { AppError } from "../../shared/errors.js";
+import { articlePermissions, profilePermissions } from "../../shared/permissions.js";
 
 export type ArticleRef = {
   id: number;
@@ -13,6 +14,7 @@ export type ArticleRef = {
 
 type ArticleRow = {
   id: number;
+  authorId: number;
   slug: string;
   title: string;
   description: string;
@@ -45,6 +47,7 @@ function articleQuery(db: Db, viewerId: number | null) {
   return db
     .select({
       id: articles.id,
+      authorId: articles.authorId,
       slug: articles.slug,
       title: articles.title,
       description: articles.description,
@@ -119,9 +122,14 @@ function tagsByArticle(db: Db, ids: number[]): Map<number, string[]> {
   return grouped;
 }
 
-function present(row: ArticleRow, tagList: string[], includeBody: true): Article;
-function present(row: ArticleRow, tagList: string[], includeBody: false): ArticleCard;
-function present(row: ArticleRow, tagList: string[], includeBody: boolean): Article | ArticleCard {
+function present(row: ArticleRow, tagList: string[], viewerId: number | null, includeBody: true): Article;
+function present(row: ArticleRow, tagList: string[], viewerId: number | null, includeBody: false): ArticleCard;
+function present(
+  row: ArticleRow,
+  tagList: string[],
+  viewerId: number | null,
+  includeBody: boolean,
+): Article | ArticleCard {
   const card = {
     slug: row.slug,
     title: row.title,
@@ -136,7 +144,9 @@ function present(row: ArticleRow, tagList: string[], includeBody: boolean): Arti
       bio: row.authorBio,
       image: row.authorImage,
       following: Number(row.following) === 1,
+      permissions: profilePermissions(viewerId, row.authorId),
     },
+    permissions: articlePermissions(viewerId, row.authorId),
   };
   if (!includeBody) return card;
   return { ...card, body: row.body };
@@ -159,7 +169,7 @@ export function listArticles(db: Db, query: ArticleListQuery, viewerId: number |
   const totalRow = (where ? counted.where(where) : counted).get();
   const tagsForRows = tagsByArticle(db, rows.map((row) => row.id));
   return {
-    articles: rows.map((row) => present(row, tagsForRows.get(row.id) ?? [], false)),
+    articles: rows.map((row) => present(row, tagsForRows.get(row.id) ?? [], viewerId, false)),
     articlesCount: Number(totalRow?.total ?? 0),
   };
 }
@@ -168,7 +178,7 @@ export function getArticle(db: Db, slug: string, viewerId: number | null): Artic
   const row = articleQuery(db, viewerId).where(eq(articles.slug, slug)).get();
   if (!row) throw new AppError("not_found", { article: ["not found"] });
   const tagList = tagsByArticle(db, [row.id]).get(row.id) ?? [];
-  return present(row, tagList, true);
+  return present(row, tagList, viewerId, true);
 }
 
 export function findArticleRef(db: Db, slug: string): ArticleRef | null {

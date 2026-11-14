@@ -38,7 +38,13 @@ describe("ProfilePage articles query key", () => {
       user: { email: "demo@realworld.local", token: "token", username: "demo", bio: null, image: null },
     });
     vi.mocked(api.profile).mockResolvedValue({
-      profile: { username: "demo", bio: null, image: null, following: false },
+      profile: {
+        username: "demo",
+        bio: null,
+        image: null,
+        following: false,
+        permissions: { follow: false, update: true },
+      },
     });
     vi.mocked(api.listArticles).mockResolvedValue({ articles: [], articlesCount: 0 });
   });

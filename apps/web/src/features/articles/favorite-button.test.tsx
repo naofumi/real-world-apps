@@ -1,23 +1,27 @@
 import type { Article, ArticleCard } from "@conduit/contracts";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, test, vi } from "vitest";
-import { setToken } from "../../lib/api.js";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { ArticleList } from "../../lib/client.js";
 import { api } from "../../lib/client.js";
 import { FavoriteButton } from "./favorite-button.js";
 
 vi.mock("../../lib/client.js", () => ({
   api: {
-    currentUser: vi.fn(),
     favorite: vi.fn(),
     unfavorite: vi.fn(),
   },
 }));
 
-const author = { username: "demo", bio: null, image: null, following: false };
+const author = {
+  username: "demo",
+  bio: null,
+  image: null,
+  following: false,
+  permissions: { follow: false, update: true },
+};
 
 const returned: Article = {
   slug: "one",
@@ -30,6 +34,7 @@ const returned: Article = {
   favorited: true,
   favoritesCount: 1,
   author,
+  permissions: { update: true, delete: true, favorite: true },
 };
 
 const card: ArticleCard = {
@@ -42,14 +47,15 @@ const card: ArticleCard = {
   favorited: false,
   favoritesCount: 0,
   author,
+  permissions: { update: true, delete: true, favorite: true },
 };
 
 describe("FavoriteButton", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
-    setToken("token");
-    vi.mocked(api.currentUser).mockResolvedValue({
-      user: { email: "demo@realworld.local", token: "token", username: "demo", bio: null, image: null },
-    });
     vi.mocked(api.favorite).mockResolvedValue({ article: returned });
   });
 
@@ -62,17 +68,30 @@ describe("FavoriteButton", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <FavoriteButton slug="one" favorited={false} favoritesCount={0} variant="detail" />
+          <FavoriteButton slug="one" favorited={false} favoritesCount={0} canFavorite variant="detail" />
         </MemoryRouter>
       </QueryClientProvider>,
     );
 
-    await waitFor(() => expect(window.__conduit_debug__?.getSnapshot().state).toBe("authenticated"));
     await user.click(screen.getByRole("button", { name: /Favorite Article/ }));
 
     await waitFor(() =>
       expect(queryClient.getQueryData<{ article: Article }>(["article", "one"])).toEqual({ article: returned }),
     );
     expect(queryClient.getQueryData<ArticleList>(listKey)?.articles[0]).toMatchObject({ favorited: true, favoritesCount: 1 });
+  });
+
+  test("sends guests to login when favorite is not allowed", async () => {
+    const user = userEvent.setup();
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={["/article/one"]}>
+          <FavoriteButton slug="one" favorited={false} favoritesCount={0} canFavorite={false} variant="detail" />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Favorite Article/ }));
+    expect(api.favorite).not.toHaveBeenCalled();
   });
 });

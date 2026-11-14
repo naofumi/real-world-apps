@@ -6,7 +6,6 @@ import { ApiError } from "../../lib/api.js";
 import { useAuth } from "../../lib/auth.js";
 import { api } from "../../lib/client.js";
 import { avatar, useDocumentTitle } from "../../lib/format.js";
-import { viewerRole } from "../../lib/viewer-role.js";
 import { ArticleActions } from "./article-actions.js";
 import { ErrorList } from "../shell/error-list.js";
 
@@ -42,14 +41,12 @@ export function ArticlePage() {
   }
   if (!article) return null;
 
-  const role = viewerRole(auth, article.author.username, article.author.following);
-
   return (
     <div className="article-page">
       <div className="banner">
         <div className="container">
           <h1>{article.title}</h1>
-          <ArticleActions role={role} article={article} onDelete={() => remove.mutate()} />
+          <ArticleActions article={article} onDelete={() => remove.mutate()} />
         </div>
       </div>
 
@@ -68,7 +65,7 @@ export function ArticlePage() {
         </div>
         <hr />
         <div className="article-actions">
-          <ArticleActions role={role} article={article} onDelete={() => remove.mutate()} />
+          <ArticleActions article={article} onDelete={() => remove.mutate()} />
         </div>
 
         <div className="row">
@@ -95,9 +92,7 @@ export function ArticlePage() {
                     {comment.author.username}
                   </Link>
                   <span className="date-posted">{new Date(comment.createdAt).toLocaleDateString()}</span>
-                  {auth.state === "authenticated" && auth.user.username === comment.author.username ? (
-                    <DeleteComment slug={slug} id={comment.id} />
-                  ) : null}
+                  {comment.permissions.delete ? <DeleteComment slug={slug} id={comment.id} /> : null}
                 </div>
               </div>
             ))}
