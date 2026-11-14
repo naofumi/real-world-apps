@@ -22,10 +22,12 @@ Companions in this Project:
 
 ## Setup
 
+Needs [Composer](https://getcomposer.org/) **2.7+** (older Composer 2.4.x floods PHP 8.4 with deprecation notices from Composer itself). Check with `composer --version`; upgrade with `composer self-update`.
+
 ```bash
 composer install
-composer migrate
-composer seed
+php bin/migrate
+php bin/seed
 ```
 
 ## Run
