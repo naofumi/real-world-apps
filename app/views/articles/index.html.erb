@@ -9,7 +9,7 @@
   <div class="container page">
     <div class="row">
       <div class="col-md-9">
-        <%= render "feed_toggle", your_feed: false %>
+        <%= render "feed_toggle", mode: (@tag.present? ? :tag : :global), tag: @tag %>
         <%= render "list", page: @page %>
       </div>
       <div class="col-md-3">

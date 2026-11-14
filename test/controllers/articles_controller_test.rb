@@ -7,6 +7,15 @@ class ArticlesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".article-preview", count: 1
     assert_select "h1", "Training Dragons"
+    assert_select ".nav-link.active", text: "# dragons"
+    assert_select ".nav-link.active", text: "Global Feed", count: 0
+  end
+
+  test "global feed marks Global Feed active" do
+    get root_path
+
+    assert_response :success
+    assert_select ".nav-link.active", text: "Global Feed"
   end
 
   test "index paginates" do
