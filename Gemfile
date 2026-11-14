@@ -62,7 +62,7 @@ end
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
-  gem "capybara-lockstep", "~> 2.3"
+  gem "capybara-lockstep", "~> 2.4"
   gem "selenium-webdriver"
 end
 

@@ -100,7 +100,7 @@ GEM
       rack-test (>= 0.6.3)
       regexp_parser (>= 1.5, < 3.0)
       xpath (~> 3.2)
-    capybara-lockstep (2.3.2)
+    capybara-lockstep (2.4.0)
       activesupport (>= 7.0)
       capybara (>= 3.0)
     commonmarker (2.10.0)
@@ -408,7 +408,7 @@ DEPENDENCIES
   brakeman
   bundler-audit
   capybara
-  capybara-lockstep (~> 2.3)
+  capybara-lockstep (~> 2.4)
   commonmarker (~> 2.10)
   debug
   image_processing (~> 1.2)
@@ -456,7 +456,7 @@ CHECKSUMS
   bundler (4.0.11) sha256=5bcec0fb78302e48d02ee46f10ee6e6942be647ba5b44a6d1ddfda9a240ce785
   bundler-audit (0.9.3) sha256=81c8766c71e47d0d28a0f98c7eed028539f21a6ea3cd8f685eb6f42333c9b4e9
   capybara (3.40.0) sha256=42dba720578ea1ca65fd7a41d163dd368502c191804558f6e0f71b391054aeef
-  capybara-lockstep (2.3.2) sha256=271a89ad7f9d0d381bb5a189058369bf607e52b5065cd84d1fadf767c2e229aa
+  capybara-lockstep (2.4.0) sha256=a95893430c5bb7d7802eff37703425a48820478665e29a62854605990496ac12
   commonmarker (2.10.0) sha256=1884529957bf59bcd4f19fcc29e931f2042760ced273353e8010a20fe4ae68cb
   commonmarker (2.10.0-aarch64-linux) sha256=eeb167dea203dee066eb0dd99b3fd2deb526c8b5e7297ad385f7a5d60f869478
   commonmarker (2.10.0-aarch64-linux-musl) sha256=e95d9e87ea6306e21ffa11855a7bb55518538143b23a227fe3bb00b41873ce25
