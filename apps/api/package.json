@@ -13,6 +13,7 @@
     "@conduit/contracts": "*",
     "@conduit/db": "*",
     "@hono/node-server": "^1.19.6",
+    "@hono/zod-validator": "^0.9.1",
     "hono": "^4.10.3",
     "zod": "^4.6.7"
   },
