@@ -121,9 +121,11 @@ describe("article queries", { concurrency: 1 }, () => {
   test("counts every favorite and marks only the viewer", () => {
     withTx((tx) => {
       seed(tx);
+
       const asStranger = listArticles(tx, page, 3).articles.find((article) => article.slug === "tagged");
       const asFan = listArticles(tx, page, 2).articles.find((article) => article.slug === "tagged");
       const asAnonymous = listArticles(tx, page, null).articles.find((article) => article.slug === "tagged");
+
       assert.equal(asStranger?.favoritesCount, 1);
       assert.equal(asStranger?.favorited, false);
       assert.equal(asFan?.favoritesCount, 1);
@@ -136,15 +138,19 @@ describe("article queries", { concurrency: 1 }, () => {
   test("following belongs to the viewer and the author", () => {
     withTx((tx) => {
       seed(tx);
+
       const cards = listArticles(tx, page, 3).articles;
+
       assert.equal(cards.find((article) => article.slug === "tagged")?.author.following, true);
       assert.equal(cards.find((article) => article.slug === "own")?.author.following, false);
       assert.equal(listArticles(tx, page, null).articles.every((article) => article.author.following === false), true);
 
       const detail = getArticle(tx, "tagged", 3);
+
       assert.equal(detail.author.following, true);
 
       const thread = listComments(tx, "tagged", 3);
+
       assert.deepEqual(
         thread.map((comment) => comment.author.username),
         ["fan", "author"],
@@ -157,11 +163,17 @@ describe("article queries", { concurrency: 1 }, () => {
   test("filters by the fan, the author, and the tag together", () => {
     withTx((tx) => {
       seed(tx);
+
       const byFan = listArticles(tx, { ...page, favorited: "fan" }, null);
+
       assert.deepEqual(byFan.articles.map((article) => article.slug), ["tagged"]);
+
       const byFanAsAuthor = listArticles(tx, { ...page, author: "fan" }, null);
+
       assert.equal(byFanAsAuthor.articlesCount, 0);
+
       const combined = listArticles(tx, { ...page, author: "author", tag: "zeta", favorited: "fan" }, 3);
+
       assert.equal(combined.articlesCount, 1);
       assert.deepEqual(combined.articles.map((article) => article.slug), ["tagged"]);
     });
@@ -170,13 +182,19 @@ describe("article queries", { concurrency: 1 }, () => {
   test("keeps tag order per article without multiplying rows", () => {
     withTx((tx) => {
       seed(tx);
+
       const listed = listArticles(tx, { ...page, tag: "zeta" }, null);
+
       assert.equal(listed.articlesCount, 1);
       assert.equal(listed.articles.length, 1);
       assert.deepEqual(listed.articles[0]?.tagList, ["zeta", "alpha", "shared"]);
+
       const detail = getArticle(tx, "tagged", null);
+
       assert.deepEqual(detail.tagList, ["zeta", "alpha", "shared"]);
+
       const plain = listArticles(tx, { ...page, author: "author" }, null).articles.find((article) => article.slug === "plain");
+
       assert.deepEqual(plain?.tagList, []);
     });
   });
@@ -184,9 +202,13 @@ describe("article queries", { concurrency: 1 }, () => {
   test("orders equal timestamps by id and hides the viewer's own articles from the feed", () => {
     withTx((tx) => {
       seed(tx);
+
       const global = listArticles(tx, page, 3);
+
       assert.deepEqual(global.articles.map((article) => article.slug), ["own", "plain", "tagged"]);
+
       const feed = listArticles(tx, { ...page, feedUserId: 3 }, 3);
+
       assert.equal(feed.articlesCount, 2);
       assert.deepEqual(feed.articles.map((article) => article.slug), ["plain", "tagged"]);
     });
@@ -195,7 +217,10 @@ describe("article queries", { concurrency: 1 }, () => {
   test("lists each tag once, alphabetically", () => {
     withTx((tx) => {
       seed(tx);
-      assert.deepEqual(listTagNames(tx), ["alpha", "shared", "zeta"]);
+
+      const names = listTagNames(tx);
+
+      assert.deepEqual(names, ["alpha", "shared", "zeta"]);
     });
   });
 });
@@ -205,8 +230,10 @@ describe("article writes", { concurrency: 1 }, () => {
     withTx((tx) => {
       insertUser(tx, 1, "author");
       insertArticle(tx, { id: 10, authorId: 1, slug: "tagged", title: "Tagged", createdAt: "2020-01-02T00:00:00.000Z" });
+
       favoriteArticle(tx, 1, "tagged");
       favoriteArticle(tx, 1, "tagged");
+
       const row = tx.select({ total: sql<number>`count(*)` }).from(favorites).get();
       assert.equal(Number(row?.total ?? 0), 1);
     });
@@ -217,7 +244,9 @@ describe("article writes", { concurrency: 1 }, () => {
       insertUser(tx, 1, "author");
       insertArticle(tx, { id: 10, authorId: 1, slug: "tagged", title: "Tagged", createdAt: "2020-01-02T00:00:00.000Z" });
       insertArticle(tx, { id: 11, authorId: 1, slug: "plain", title: "Plain", createdAt: "2020-01-02T00:00:00.000Z" });
+
       updateArticle(tx, "plain", 1, { title: "Tagged" });
+
       const rows = tx.select({ id: articles.id, slug: articles.slug }).from(articles).all();
       assert.equal(rows.find((row) => row.id === 10)?.slug, "tagged");
       assert.equal(rows.find((row) => row.id === 11)?.slug, "tagged-2");
@@ -233,7 +262,9 @@ describe("article writes", { concurrency: 1 }, () => {
       insertTag(tx, 10, "shared", 0);
       insertTag(tx, 12, "shared", 0);
       insertTag(tx, 12, "only-own", 1);
+
       removeArticle(tx, "own", 3);
+
       const remainingTags = tx.select({ name: tags.name }).from(tags).all().map((row) => row.name);
       const remainingLinks = tx.select({ articleId: articleTags.articleId }).from(articleTags).all();
       assert.deepEqual(remainingTags, ["shared"]);
