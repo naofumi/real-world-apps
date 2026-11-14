@@ -35,7 +35,7 @@ module Authentication
     end
 
     def safe_return_url
-      candidate = request.get? ? request.url : request.referer
+      candidate = (request.get? || request.head?) ? request.url : request.referer
       uri = URI.parse(candidate.to_s)
       return root_url unless uri.host.nil? || uri.host == request.host
 
