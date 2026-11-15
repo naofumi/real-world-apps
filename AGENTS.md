@@ -30,6 +30,8 @@ Follow those when they conflict with older patterns or with habits from Laravel/
 
 Dev server: `php bin/dev` → `php -S … -t public` (no rewrite router).
 
-## Diagrams
+## Diagrams and surface
 
 Request stack, one POST walkthrough, and the SQLite data model: [`docs/architecture.md`](./docs/architecture.md).
+
+Conduit capability → page → e2e map: [`docs/features.md`](./docs/features.md).

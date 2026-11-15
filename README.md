@@ -11,6 +11,8 @@ Agent coding norms: [`AGENTS.md`](./AGENTS.md) and [`.cursor/rules/`](./.cursor/
 
 Architecture diagrams (request stack, favorite POST, data model): [`docs/architecture.md`](./docs/architecture.md).
 
+Conduit surface inventory (capability → page → e2e): [`docs/features.md`](./docs/features.md).
+
 ## Stack
 
 | Piece | Choice |
