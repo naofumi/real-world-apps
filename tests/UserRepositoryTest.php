@@ -27,4 +27,36 @@ final class UserRepositoryTest extends TestCase
         self::assertSame('alice', $found['username']);
         self::assertTrue(Password::verify('password', (string) $found['password_hash']));
     }
+
+    public function testDuplicateEmailFails(): void
+    {
+        $pdo = PdoFactory::make(':memory:');
+        (new Migrator($pdo))->migrate();
+        $users = new UserRepository($pdo);
+
+        self::assertTrue($users->create('alice@example.com', 'alice', Password::hash('password'))['ok']);
+        $dup = $users->create('alice@example.com', 'alice2', Password::hash('password'));
+        self::assertFalse($dup['ok']);
+    }
+
+    public function testFollowUnfollowAndIgnoreSelf(): void
+    {
+        $pdo = PdoFactory::make(':memory:');
+        (new Migrator($pdo))->migrate();
+        $users = new UserRepository($pdo);
+
+        $alice = $users->create('alice@example.com', 'alice', Password::hash('password'));
+        $bob = $users->create('bob@example.com', 'bob', Password::hash('password'));
+        self::assertTrue($alice['ok']);
+        self::assertTrue($bob['ok']);
+
+        $users->follow($bob['id'], $bob['id']);
+        self::assertFalse($users->isFollowing($bob['id'], $bob['id']));
+
+        $users->follow($bob['id'], $alice['id']);
+        self::assertTrue($users->isFollowing($bob['id'], $alice['id']));
+
+        $users->unfollow($bob['id'], $alice['id']);
+        self::assertFalse($users->isFollowing($bob['id'], $alice['id']));
+    }
 }
