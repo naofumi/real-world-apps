@@ -7,6 +7,8 @@ Companions:
 - Rails ERB — `real-world-app-rails-erb`
 - React + Hono — `real-world-app-react-hono`
 
+Agent coding norms: [`AGENTS.md`](./AGENTS.md) and [`.cursor/rules/`](./.cursor/rules/).
+
 ## Stack
 
 | Piece | Choice |
