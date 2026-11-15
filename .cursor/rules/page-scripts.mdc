@@ -1,0 +1,24 @@
+---
+description: Keep classic page scripts; no mini-framework router
+globs: "public/**/*.php,includes/**/*.php"
+alwaysApply: true
+---
+
+# Page scripts
+
+This app uses **classic PHP page scripts**. The web server maps the URL to a file. There is no app-level router.
+
+Do:
+
+- Add or change behavior in `public/<name>.php` (or a focused POST sibling such as `article_favorite.php`).
+- Start pages with `require …/includes/bootstrap.php`.
+- Use query strings for ids (`article.php?slug=…`, `profile.php?username=…`).
+- Keep the request story readable top to bottom in the page file.
+
+Do not:
+
+- Reintroduce `App\Http\Router`, a front controller, or `public/router.php`.
+- Add Slim/Laravel/Symfony “just for routing.”
+- Extract a controller/service layer from a page **only** to make unit tests easier.
+
+Pretty URLs (`/article/slug`) are an optional later rewrite. They are not a reason to add an in-app router.
