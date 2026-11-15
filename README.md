@@ -9,6 +9,8 @@ Companions:
 
 Agent coding norms: [`AGENTS.md`](./AGENTS.md) and [`.cursor/rules/`](./.cursor/rules/).
 
+Architecture diagrams (request stack, favorite POST, data model): [`docs/architecture.md`](./docs/architecture.md).
+
 ## Stack
 
 | Piece | Choice |

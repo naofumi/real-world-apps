@@ -29,3 +29,7 @@ Follow those when they conflict with older patterns or with habits from Laravel/
 | `e2e/` | Playwright against `php -S` + seeded DB |
 
 Dev server: `php bin/dev` → `php -S … -t public` (no rewrite router).
+
+## Diagrams
+
+Request stack, one POST walkthrough, and the SQLite data model: [`docs/architecture.md`](./docs/architecture.md).
