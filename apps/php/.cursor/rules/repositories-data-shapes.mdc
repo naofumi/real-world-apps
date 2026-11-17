@@ -1,0 +1,24 @@
+---
+description: PDO repositories return row/DTO shapes, not domain entities
+globs: "src/Persistence/**/*.php,tests/**/*.php"
+alwaysApply: false
+---
+
+# Repositories
+
+`src/Persistence/*Repository` classes are persistence adapters, closer to the React Hono **query modules** than to Rails ActiveRecord models.
+
+Do:
+
+- Return associative arrays / lists of rows shaped for the page (include join fields such as `author_username` when the UI needs them).
+- Keep SQL and prepared statements inside the repository.
+- Put request/auth/csrf/redirect decisions in the page script.
+
+Do not:
+
+- Invent rich entity objects with behavior for articles/users “for OO purity.”
+- Grow an ORM, query builder, or unit-of-work package.
+- Hide ownership checks only in the repository when the page must also decide redirects and flash messages.
+
+❌ Domain entity with methods the page calls for everything  
+✅ `$article = $articles->findBySlug($slug);` then page reads fields and decides

@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+$host = '127.0.0.1';
+$port = '8080';
+$public = dirname(__DIR__) . '/public';
+
+fwrite(STDOUT, "Conduit (PHP) at http://{$host}:{$port}\n");
+passthru(
+    escapeshellarg(PHP_BINARY) . ' -S ' . escapeshellarg("{$host}:{$port}")
+    . ' -t ' . escapeshellarg($public),
+    $exit,
+);
+exit($exit);
