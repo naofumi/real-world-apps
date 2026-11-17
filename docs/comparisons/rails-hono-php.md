@@ -91,6 +91,23 @@ What that means in practice:
 
 Fair claim from the earlier Rails-vs-Hono work, still holds with PHP added: **ORM vs hand SQL** explains most of the server LoC gap. It is not “UI framework sophistication.”
 
+### Why Hono’s server row is ~2× PHP’s
+
+Fresh `cloc` on this monorepo matches the table above: Hono **1,492** vs PHP **764** (gap **728**).
+
+Hand-written article SQL is **not** the explanation — `ArticleRepository.php` (~349) is in the same band as Hono `articles/queries.ts` + `service.ts` (+ slug) (~327). Broader domain persistence cores sit near parity (~611 Hono vs ~577 PHP).
+
+Most of the extra Hono lines are the **RealWorld JSON API** and packaging that PHP never puts in `src/`:
+
+| Hono cost (approx.) | What PHP does instead |
+| --- | --- |
+| ~440 — Zod schemas, route `http.ts` adapters, `@conduit/contracts` | HTML page scripts under `public/` / `includes/` (UI row) |
+| ~201 — `seed.ts` + `app.ts` + `server.ts` | `bin/seed`, `includes/bootstrap.php` (outside `src/`) |
+| ~128 — `packages/db` Drizzle schema/client | `Migrator` + `PdoFactory` (~45) plus SQL in repositories |
+| ~40+ — `permissions` helpers + JSON `present()` mappers | Inline session/ownership checks in page scripts |
+
+So the server-row ratio is mostly **JSON API + shared contracts + in-bucket wiring**, not “Hono writes twice as much SQL.” JWT vs PHP session is a small local difference. Do not read the 2× as a persistence-complexity score: PHP auth guards in `public/*.php` are counted in the UI row, not in the 764.
+
 ## Frontend / page size
 
 Product UI (excl. vendored Conduit CSS):
