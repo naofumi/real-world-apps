@@ -19,7 +19,7 @@ All three implement the Conduit blogging surface (feeds, articles, comments, fav
 | Auth | Cookie sessions | JWT bearer | Cookie sessions + CSRF |
 | DB | Active Record + SQLite | Drizzle + SQLite | PDO repositories + SQLite |
 
-Longer writeup with fresh LoC and page-size tables: [`comparisons/rails-hono-php.md`](./comparisons/rails-hono-php.md). Index: [`comparisons/README.md`](./comparisons/README.md).
+Longer writeup with fresh LoC and page-size tables: [`comparisons/rails-hono-php.md`](./comparisons/rails-hono-php.md). Qualitative testing-layer comparison (no LoC): [`comparisons/testing-strategies.md`](./comparisons/testing-strategies.md). Index: [`comparisons/README.md`](./comparisons/README.md).
 
 ## CI note
 
@@ -27,5 +27,5 @@ Each app still carries its own tooling under its directory. Nested workflows suc
 
 ## Planned
 
-- Topic slices split out of the three-way note (authz-only, testing pyramid, “illegal states”)
+- Topic slices split out of the three-way note (authz-only, “illegal states”)
 - Path-filtered CI per app at the monorepo root
