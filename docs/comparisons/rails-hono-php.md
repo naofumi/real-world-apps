@@ -8,6 +8,10 @@ Same Conduit (RealWorld) product surface in three stacks under `apps/`. Numbers 
 | React + Hono | [`apps/react-hono`](../../apps/react-hono) |
 | PHP page scripts | [`apps/php`](../../apps/php) |
 
+![Conduit LoC comparison: Rails ~1,082, PHP ~1,733, Hono ~3,028 application lines; server vs UI buckets; Hono server ~2× PHP driven mainly by JSON API (~440), seed/entry (~201), and Drizzle (~128) — not article SQL.](./images/rails-hono-php-loc.png)
+
+*Poster summary of the tables below: application totals and ratios, server vs UI path buckets, and why Hono’s server row is ~2× PHP’s (JSON API + in-bucket wiring, not hand-SQL size). Source for this page: the sections that follow.*
+
 ## High-level LoC
 
 **Application** = product server + UI code (no vendored Conduit CSS, no tests).
