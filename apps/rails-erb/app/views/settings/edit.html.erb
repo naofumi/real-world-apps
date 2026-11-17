@@ -1,0 +1,37 @@
+<div class="settings-page">
+  <div class="container page">
+    <div class="row">
+      <div class="col-md-6 offset-md-3 col-xs-12">
+        <h1 class="text-xs-center">Your Settings</h1>
+
+        <%= form_with model: Current.user, url: settings_path do |form| %>
+          <%= render "shared/errors", record: Current.user %>
+          <fieldset class="form-group">
+            <%= form.label :image, "URL of profile picture" %>
+            <%= form.url_field :image, class: "form-control", placeholder: "URL of profile picture" %>
+          </fieldset>
+          <fieldset class="form-group">
+            <%= form.label :username, "Username" %>
+            <%= form.text_field :username, class: "form-control form-control-lg", placeholder: "Username", required: true %>
+          </fieldset>
+          <fieldset class="form-group">
+            <%= form.label :bio, "Bio" %>
+            <%= form.text_area :bio, class: "form-control form-control-lg", rows: 8, placeholder: "Short bio about you" %>
+          </fieldset>
+          <fieldset class="form-group">
+            <%= form.label :email_address, "Email" %>
+            <%= form.email_field :email_address, class: "form-control form-control-lg", placeholder: "Email", required: true, autocomplete: "email" %>
+          </fieldset>
+          <fieldset class="form-group">
+            <%= form.label :password, "New password" %>
+            <%= form.password_field :password, class: "form-control form-control-lg", placeholder: "New password", autocomplete: "new-password", maxlength: 72 %>
+          </fieldset>
+          <%= form.submit "Update Settings", class: "btn btn-lg btn-primary pull-xs-right" %>
+        <% end %>
+
+        <hr>
+        <%= button_to "Or click here to logout.", session_path, method: :delete, class: "btn btn-outline-danger" %>
+      </div>
+    </div>
+  </div>
+</div>

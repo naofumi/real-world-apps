@@ -1,0 +1,21 @@
+<div class="auth-page">
+  <div class="container page">
+    <div class="row">
+      <div class="col-md-6 offset-md-3 col-xs-12">
+        <h1 class="text-xs-center">Reset your password</h1>
+
+        <%= form_with url: password_path(params[:token]), method: :put do |form| %>
+          <fieldset class="form-group">
+            <%= form.label :password, "New password" %>
+            <%= form.password_field :password, class: "form-control form-control-lg", placeholder: "New password", required: true, autofocus: true, autocomplete: "new-password", maxlength: 72 %>
+          </fieldset>
+          <fieldset class="form-group">
+            <%= form.label :password_confirmation, "Confirm new password" %>
+            <%= form.password_field :password_confirmation, class: "form-control form-control-lg", placeholder: "Confirm new password", required: true, autocomplete: "new-password", maxlength: 72 %>
+          </fieldset>
+          <%= form.submit "Reset password", class: "btn btn-lg btn-primary pull-xs-right" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

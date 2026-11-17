@@ -1,0 +1,9 @@
+<% if page.records.length > 0 %>
+  <% page.records.each do |article| %>
+    <%= render "articles/article", article: article, favorited: article.favorite_by_current_user.present? %>
+  <% end %>
+<% else %>
+  <div class="empty-feed-message">No articles are here... yet.</div>
+<% end %>
+
+<%= render "shared/pagination", page: page %>

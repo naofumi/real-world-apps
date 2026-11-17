@@ -1,0 +1,21 @@
+<%# locals: (mode:, tag: nil) %>
+<% raise ArgumentError unless mode.in?(%i[global following tag]) %>
+<% raise ArgumentError if (mode == :tag) != tag.present? %>
+
+<div class="feed-toggle">
+  <ul class="nav nav-pills outline-active">
+    <% if authenticated? %>
+      <li class="nav-item">
+        <%= link_to "Your Feed", feed_path, class: "nav-link #{ "active" if mode == :following }" %>
+      </li>
+    <% end %>
+    <li class="nav-item">
+      <%= link_to "Global Feed", root_path, class: "nav-link #{ "active" if mode == :global }" %>
+    </li>
+    <% if mode == :tag %>
+      <li class="nav-item">
+        <a class="nav-link active"># <%= tag %></a>
+      </li>
+    <% end %>
+  </ul>
+</div>

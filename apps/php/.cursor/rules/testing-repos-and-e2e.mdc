@@ -1,0 +1,30 @@
+---
+description: PHPUnit for repositories; Playwright for Conduit flows
+globs: "tests/**/*.php,e2e/**/*.{ts,js},playwright.config.ts"
+alwaysApply: false
+---
+
+# Testing
+
+Lean mix, aligned with the React Hono preference for real flows over mock-heavy page tests.
+
+**Repository PHPUnit** (`composer test`):
+
+- Use in-memory SQLite via `PdoFactory::make(':memory:')` + `Migrator`.
+- Cover data shapes and SQL behavior: feeds, favorites, follows, comments, slug uniqueness.
+- Fast safety net. Will not catch a wrong form `action` or missing CSRF field.
+
+**Playwright E2E** (`npm run test:e2e`):
+
+- Hits `php -S` with a reseeded `storage/e2e.sqlite3` (`APP_DATABASE_PATH`).
+- Cover auth, feeds/tags, publish, favorite, follow, comment.
+- Proves cookies, redirects, includes, and HTML together.
+
+Do not:
+
+- Extract page-script orchestration into services **just** to unit-test it.
+- Add a custom PHP request harness (`ob_start` + include) unless E2E is too coarse for a recurring bug class.
+- Mirror the Rails controller test matrix without a framework to hang it on.
+
+❌ Vitest-style “render login.php with mocks” as the primary page coverage  
+✅ E2E login flow + repository tests for the SQL underneath

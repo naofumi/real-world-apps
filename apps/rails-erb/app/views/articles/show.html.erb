@@ -1,0 +1,52 @@
+<% favorited = authenticated? && @article.favorite_by_current_user.present? %>
+<div class="article-page">
+  <div class="banner">
+    <div class="container">
+      <h1><%= @article.title %></h1>
+      <%= render "meta", article: @article, favorited: favorited %>
+    </div>
+  </div>
+
+  <div class="container page">
+    <div class="row article-content">
+      <div class="col-md-12">
+        <%= render_markdown @article.body %>
+        <ul class="tag-list">
+          <% @article.tags.each do |tag| %>
+            <li class="tag-default tag-pill tag-outline"><%= link_to tag.name, articles_path(tag: tag.name) %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="article-actions">
+      <%= render "meta", article: @article, favorited: favorited %>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-12 col-md-8 offset-md-2">
+        <% if authenticated? %>
+          <%= form_with model: [@article, @comment], class: "card comment-form" do |form| %>
+            <%= render "shared/errors", record: @comment %>
+            <div class="card-block">
+              <%= form.label :body, "Comment", class: "visually-hidden" %>
+              <%= form.text_area :body, class: "form-control", rows: 3, placeholder: "Write a comment..." %>
+            </div>
+            <div class="card-footer">
+              <%= avatar_tag Current.user, class: "comment-author-img" %>
+              <%= form.submit "Post Comment", class: "btn btn-sm btn-primary" %>
+            </div>
+          <% end %>
+        <% else %>
+          <p>
+            <%= link_to "Sign in", new_session_path %> or <%= link_to "sign up", new_registration_path %> to add comments on this article.
+          </p>
+        <% end %>
+
+        <%= render @comments %>
+      </div>
+    </div>
+  </div>
+</div>

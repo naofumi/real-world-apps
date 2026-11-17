@@ -1,0 +1,8 @@
+<div class="sidebar">
+  <p>Popular Tags</p>
+  <div class="tag-list">
+    <% tags.each do |tag| %>
+      <%= link_to tag.name, articles_path(tag: tag.name), class: "tag-pill tag-default #{ "active" if tag.name == current }" %>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,6 @@
+alice_on_bobs:
+  article: bobs
+  user: alice
+  body: His name was my name too.
+  created_at: <%= 1.hour.ago %>
+  updated_at: <%= 1.hour.ago %>

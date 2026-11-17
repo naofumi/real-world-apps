@@ -1,0 +1,22 @@
+<div class="article-meta">
+  <%= link_to user_path(article.user) do %>
+    <%= avatar_tag article.user %>
+  <% end %>
+  <div class="info">
+    <%= link_to article.user.username, user_path(article.user), class: "author" %>
+    <span class="date"><%= posted_on article.created_at %></span>
+  </div>
+  <% if can?(:update, article) %>
+    <%= link_to edit_article_path(article), class: "btn btn-sm btn-outline-secondary" do %>
+      <i class="ion-edit"></i>&nbsp;Edit Article
+    <% end %>
+    <%= button_to article_path(article), method: :delete, class: "btn btn-sm btn-outline-danger", data: { turbo_confirm: "Delete this article?", testid: 'delete_article' } do %>
+      <i class="ion-trash-a"></i>&nbsp;Delete Article
+    <% end %>
+  <% elsif article.user != Current.user %>
+    <%= render "users/follow_button", user: article.user %>
+  <% end %>
+  <div class="favorite favorite--full">
+    <%= render "favorite_button", article: article, favorited: favorited %>
+  </div>
+</div>

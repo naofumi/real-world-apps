@@ -1,0 +1,7 @@
+alice_rails:
+  article: alices
+  tag: rails
+
+bob_dragons:
+  article: bobs
+  tag: dragons

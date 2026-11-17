@@ -1,0 +1,29 @@
+<div class="auth-page">
+  <div class="container page">
+    <div class="row">
+      <div class="col-md-6 offset-md-3 col-xs-12">
+        <h1 class="text-xs-center">Sign up</h1>
+        <p class="text-xs-center">
+          <%= link_to "Have an account?", new_session_path %>
+        </p>
+
+        <%= form_with model: @user, url: registration_path do |form| %>
+          <%= render "shared/errors", record: @user %>
+          <fieldset class="form-group">
+            <%= form.label :username, "Username" %>
+            <%= form.text_field :username, class: "form-control form-control-lg", placeholder: "Username", required: true, autofocus: true, autocomplete: "username" %>
+          </fieldset>
+          <fieldset class="form-group">
+            <%= form.label :email_address, "Email" %>
+            <%= form.email_field :email_address, class: "form-control form-control-lg", placeholder: "Email", required: true, autocomplete: "email" %>
+          </fieldset>
+          <fieldset class="form-group">
+            <%= form.label :password, "Password" %>
+            <%= form.password_field :password, class: "form-control form-control-lg", placeholder: "Password", required: true, autocomplete: "new-password", maxlength: 72 %>
+          </fieldset>
+          <%= form.submit "Sign up", class: "btn btn-lg btn-primary pull-xs-right" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

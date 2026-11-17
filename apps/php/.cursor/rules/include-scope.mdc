@@ -1,0 +1,23 @@
+---
+description: Discipline shared variables when requiring header and partials
+globs: "public/**/*.php,includes/**/*.php"
+alwaysApply: false
+---
+
+# Include / require scope
+
+`require` shares the caller’s variable scope. Partials see `$viewer`, `$csrfToken`, `$article`, and anything else the page left in scope. That is powerful and brittle.
+
+Do:
+
+- Before `header.php`, set the usual chrome vars: `$title`, `$viewer`, `$csrfToken`, and flash/alert when needed.
+- Keep partials dumb: they render fields, they do not load data.
+- Name page-local vars clearly so accidental leakage into partials is obvious.
+
+Do not:
+
+- Rely on a partial defining a variable the next page “happens” to need.
+- Build a View/renderer class to paper over scope until the pain is concrete.
+
+❌ Partial that calls repositories  
+✅ Page loads data, then `require` header / preview / footer

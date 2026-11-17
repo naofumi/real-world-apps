@@ -1,0 +1,35 @@
+<nav class="navbar navbar-light">
+  <div class="container">
+    <%= link_to "conduit", root_path, class: "navbar-brand" %>
+    <ul class="nav navbar-nav pull-xs-right">
+      <li class="nav-item">
+        <%= link_to "Home", root_path, class: "nav-link #{ "active" if current_page?(root_path) }" %>
+      </li>
+      <% if authenticated? %>
+        <li class="nav-item">
+          <%= link_to new_article_path, class: "nav-link #{ "active" if current_page?(new_article_path) }" do %>
+            <i class="ion-compose"></i>&nbsp;New Article
+          <% end %>
+        </li>
+        <li class="nav-item">
+          <%= link_to edit_settings_path, class: "nav-link #{ "active" if current_page?(edit_settings_path) }" do %>
+            <i class="ion-gear-a"></i>&nbsp;Settings
+          <% end %>
+        </li>
+        <li class="nav-item">
+          <%= link_to user_path(Current.user), class: "nav-link" do %>
+            <%= avatar_tag Current.user, class: "user-pic" %>
+            <%= Current.user.username %>
+          <% end %>
+        </li>
+      <% else %>
+        <li class="nav-item">
+          <%= link_to "Sign in", new_session_path, class: "nav-link #{ "active" if current_page?(new_session_path) }" %>
+        </li>
+        <li class="nav-item">
+          <%= link_to "Sign up", new_registration_path, class: "nav-link #{ "active" if current_page?(new_registration_path) }" %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</nav>
