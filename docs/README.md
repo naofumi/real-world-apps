@@ -19,11 +19,13 @@ All three implement the Conduit blogging surface (feeds, articles, comments, fav
 | Auth | Cookie sessions | JWT bearer | Cookie sessions + CSRF |
 | DB | Active Record + SQLite | Drizzle + SQLite | PDO repositories + SQLite |
 
+Longer writeup with fresh LoC and page-size tables: [`comparisons/rails-hono-php.md`](./comparisons/rails-hono-php.md). Index: [`comparisons/README.md`](./comparisons/README.md).
+
 ## CI note
 
 Each app still carries its own tooling under its directory. Nested workflows such as `apps/rails-erb/.github/workflows/` are **not** picked up by GitHub Actions from the monorepo root until they are moved/adapted with `defaults.run.working-directory` (or path filters) under a top-level `.github/`.
 
 ## Planned
 
-- Longer comparison notes (authz, testing pyramid, “illegal states”)
+- Topic slices split out of the three-way note (authz-only, testing pyramid, “illegal states”)
 - Path-filtered CI per app at the monorepo root

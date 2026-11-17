@@ -8,7 +8,7 @@ Comparison monorepo for three [RealWorld](https://realworld-docs.netlify.app/) (
 | React + Hono | [`apps/react-hono`](./apps/react-hono) | React SPA, Hono API, Drizzle, SQLite |
 | PHP | [`apps/php`](./apps/php) | PHP 8.4 page scripts, PDO + SQLite |
 
-Cross-stack comparison writeups live in [`docs/`](./docs).
+Cross-stack comparison writeups live in [`docs/`](./docs). Three-way LoC and architecture note: [`docs/comparisons/rails-hono-php.md`](./docs/comparisons/rails-hono-php.md).
 
 Each app is self-contained. **Run commands from that app’s directory** (see its README for setup, ports, and tests).
 
