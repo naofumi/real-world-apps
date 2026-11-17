@@ -1,0 +1,26 @@
+---
+description: Prefer discriminated unions over parallel booleans in the web app
+globs: apps/web/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Client state unions
+
+Encode modes as one discriminated union. Do not keep independent flags or optionals that can disagree.
+
+```ts
+// BAD — feed + tag can both look "on"
+const feed = !tag && searchParams.get("feed") === "following";
+
+// GOOD
+type FeedMode =
+  | { kind: "global" }
+  | { kind: "following" }
+  | { kind: "tag"; tag: string };
+```
+
+Same idea for editor create vs edit, list loading/error/success, auth snapshot (`authenticated` implies `user`), and profile article tabs.
+
+Destructure `useQuery` (and similar) at the call site. Do not wrap it in a custom hook unless the user asks.
+
+Prefer one small modeling win. Avoid large extract or type-hygiene tours that only move code.

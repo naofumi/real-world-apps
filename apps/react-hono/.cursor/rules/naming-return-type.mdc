@@ -1,0 +1,20 @@
+---
+description: Name functions so the return type is obvious at the call site
+alwaysApply: true
+---
+
+# Naming and return type
+
+Name a function after what it returns (or clearly does), so callers need not open the signature.
+
+```ts
+// BAD — sounds like a role, returns an Account
+viewerFromHeader(header, db, secret);
+
+// GOOD
+accountFromHeader(header, db, secret);
+```
+
+Context keys may still say `viewer` when that is the role in the request. The helper that builds the value should still name the value (`account`, `userId`, `token`, …).
+
+Prefer concrete result types over vague bags at boundaries.

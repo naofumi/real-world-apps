@@ -1,0 +1,31 @@
+---
+description: Validate API requests with Hono Zod middleware
+globs: apps/api/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Hono Zod validation
+
+Validate HTTP bodies and query strings with `@hono/zod-validator` wrappers in `apps/api/src/http/validate.ts`.
+
+- Schemas live in `apps/api/src/http/schemas.ts`.
+- Attach `zJson(schema)` or `zQuery(schema)` on the route.
+- Handlers read `c.req.valid("json")` or `c.req.valid("query")`.
+- Map Zod failures to RealWorld `FieldErrors` via `AppError("validation", …)`.
+
+```ts
+// BAD — hand-rolled parse helpers beside the router
+const input = parseRegister(await c.req.json());
+
+// GOOD
+api.post("/users", zJson(registerJson), async (c) => {
+  const input = c.req.valid("json");
+  // ...
+});
+```
+
+Do not resurrect `parse.ts` or a parallel parse-helper layer.
+
+Prefer typed exceptions (`HTTPException` for malformed JSON) over string-sniffing error messages.
+
+Keep `AppError` → HTTP status mapping literal and explicit.
