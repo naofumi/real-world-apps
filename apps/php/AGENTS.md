@@ -1,4 +1,4 @@
-# Agent notes (real-world-app-php)
+# Agent notes (apps/php)
 
 ## Style goals
 

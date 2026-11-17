@@ -2,10 +2,9 @@
 
 A [RealWorld](https://realworld-docs.netlify.app/) (Conduit) blogging app in **PHP 8.4** with **no framework and no app router**. Each URL is a real PHP file under `public/`; the web server does the routing. Data access is **PDO + SQLite**.
 
-Companions:
+Part of the [`real-world-apps`](../../) monorepo. Companions: [`../rails-erb`](../rails-erb), [`../react-hono`](../react-hono).
 
-- Rails ERB — `real-world-app-rails-erb`
-- React + Hono — `real-world-app-react-hono`
+Run all commands from this directory (`apps/php`).
 
 Agent coding norms: [`AGENTS.md`](./AGENTS.md) and [`.cursor/rules/`](./.cursor/rules/).
 

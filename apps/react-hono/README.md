@@ -2,6 +2,10 @@
 
 A RealWorld implementation: React SPA, Hono API, SQLite, Drizzle.
 
+Part of the [`real-world-apps`](../../) monorepo. Companions: [`../rails-erb`](../rails-erb), [`../php`](../php).
+
+Run all commands from this directory (`apps/react-hono`). This package is its own npm workspaces root (`apps/*` and `packages/*` here are relative to this folder).
+
 The HTTP API matches the [RealWorld contract](https://docs.realworld.show/specifications/backend/introduction/) (`/api/...`, `Authorization: Token <jwt>`, the documented JSON shapes and error bodies). Domain modules sit behind that adapter. Each module writes only its own tables. Screens that need a join, such as an article card with its author, live in a query file.
 
 | Module | Writes |

@@ -1,4 +1,4 @@
-# Agent notes (real-world-app-react-hono)
+# Agent notes (apps/react-hono)
 
 ## Style goals
 

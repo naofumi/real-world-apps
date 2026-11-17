@@ -2,7 +2,9 @@
 
 A [RealWorld](https://realworld-docs.netlify.app/) (Conduit) blogging app built with **Rails 8**, **ERB**, and **Hotwire**. Cookie sessions, server-rendered pages, and Turbo Streams for favorite/follow toggles — no SPA client.
 
-Companion stack in this Project: the React + Hono RealWorld app (`real-world-app-react-hono`).
+Part of the [`real-world-apps`](../../) monorepo. Companions: [`../react-hono`](../react-hono), [`../php`](../php).
+
+Run all commands from this directory (`apps/rails-erb`).
 
 ## Stack
 
