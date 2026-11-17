@@ -1,0 +1,3 @@
+<%= turbo_stream.replace_all ".#{dom_id(@article, :favorite)}", method: :morph do %>
+  <%= render "articles/favorite_button", article: @article, favorited: @article.favorite_by_current_user.present? %>
+<% end %>

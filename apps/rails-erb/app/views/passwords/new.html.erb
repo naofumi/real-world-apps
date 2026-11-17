@@ -1,0 +1,17 @@
+<div class="auth-page">
+  <div class="container page">
+    <div class="row">
+      <div class="col-md-6 offset-md-3 col-xs-12">
+        <h1 class="text-xs-center">Forgot your password?</h1>
+
+        <%= form_with url: passwords_path do |form| %>
+          <fieldset class="form-group">
+            <%= form.label :email_address, "Email" %>
+            <%= form.email_field :email_address, class: "form-control form-control-lg", placeholder: "Email", required: true, autofocus: true, autocomplete: "username", value: params[:email_address] %>
+          </fieldset>
+          <%= form.submit "Email reset instructions", class: "btn btn-lg btn-primary pull-xs-right" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

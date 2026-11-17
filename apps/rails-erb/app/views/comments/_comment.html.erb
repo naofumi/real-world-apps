@@ -1,0 +1,19 @@
+<div class="card">
+  <div class="card-block">
+    <p class="card-text"><%= simple_format comment.body, {}, wrapper_tag: "span" %></p>
+  </div>
+  <div class="card-footer">
+    <%= link_to user_path(comment.user), class: "comment-author" do %>
+      <%= avatar_tag comment.user, class: "comment-author-img" %>
+    <% end %>
+    <%= link_to comment.user.username, user_path(comment.user), class: "comment-author" %>
+    <span class="date-posted"><%= posted_on comment.created_at %></span>
+    <% if can?(:destroy, comment) %>
+      <span class="mod-options">
+        <%= button_to article_comment_path(comment.article, comment), method: :delete, data: {testid: "delete_comment"}, aria: { label: "Delete comment" } do %>
+          <i class="ion-trash-a"></i>
+        <% end %>
+      </span>
+    <% end %>
+  </div>
+</div>

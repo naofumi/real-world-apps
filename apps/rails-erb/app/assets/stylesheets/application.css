@@ -1,0 +1,63 @@
+/* App rules layered on top of the Conduit theme in conduit.css. */
+
+.flash {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+}
+
+.flash.notice {
+  background: #eef8f0;
+  color: #237630;
+}
+
+.flash.alert {
+  background: #f8eeee;
+  color: #b85c5c;
+}
+
+.article-meta form,
+.article-actions form,
+.mod-options form,
+.user-info form {
+  display: inline;
+}
+
+.favorite--compact .favorite__count,
+.favorite--full .favorite__label {
+  display: inline;
+}
+
+.favorite--compact .favorite__label,
+.favorite--full .favorite__count {
+  display: none;
+}
+
+.mod-options button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+}
+
+.article-content :first-child {
+  margin-top: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
