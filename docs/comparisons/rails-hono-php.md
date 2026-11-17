@@ -28,12 +28,24 @@ Method notes:
 
 ### Server vs product UI
 
-| | Rails | Hono | PHP |
-| --- | ---: | ---: | ---: |
-| Server / persistence | ~475 (`app/models|controllers|helpers|…`) | ~1,315 (`apps/api/src`) + ~177 packages TS | ~764 (`src/`) |
-| Product UI / pages | ~587 (views + JS + `application.css`) | ~1,536 (`apps/web/src` excl. tests) | ~969 (`public/` + `includes/`, excl. CSS) |
+This table is the **application** total split into two directory buckets per stack: code that mainly talks to the database / enforces request rules on the server, versus code that mainly produces what the browser shows. Rows are not a perfect “backend vs frontend” abstraction — they are path groups — so read the caveats under the table before comparing cells across columns.
 
-PHP’s “page” bucket is not render-only: each `public/*.php` file also owns auth guards, CSRF, redirects, and flash. Rails keeps that in controllers; Hono splits it between API handlers and SPA client code.
+| Row | What it counts | Rails | Hono | PHP |
+| --- | --- | ---: | ---: | ---: |
+| Server / persistence | Request handling + domain + DB access on the server | ~475 — `app/models`, `controllers`, `helpers`, `jobs`, `mailers` | ~1,492 — `apps/api/src` (~1,315) + `packages/{db,contracts}/src` (~177) | ~764 — `src/` (Persistence, Security, Support) |
+| Product UI / pages | Templates, SPA UI, or page-script HTML shell | ~587 — `app/views`, `app/javascript`, `application.css` | ~1,536 — `apps/web/src` excl. `*.test.*` | ~969 — `public/*.php` + `includes/` (excl. CSS) |
+
+**What you can read**
+
+- Rails and Hono have a clean split: controllers/API stay in the server row; ERB or React stay in the UI row. On that split, Hono is larger on **both** sides (~3× server, ~2.6× UI vs Rails).
+- PHP’s server row (`src/`) is mostly PDO repositories and session/CSRF helpers — closer to Hono’s hand-SQL API than to Rails Active Record (detail in [Server / data access](#server--data-access)).
+- PHP’s UI row is larger than Rails’ views mainly because page scripts are not markup-only (next caveat). Hono’s UI row is larger still because of SPA client lifecycle (`lib/`, fetch/mutate state); see [Frontend / page size](#frontend--page-size).
+
+**What you should not read**
+
+- Do **not** treat PHP’s two rows as “backend vs frontend” the way Rails/Hono are. Each `public/*.php` file owns auth guards, CSRF checks, redirects, and flash **and** the HTML. That request logic would sit in Rails controllers or Hono API handlers (server row), but here it is counted in the PHP UI/pages row.
+- Do **not** add the two rows and expect exact equality with the Application total above for every stack: Hono packages are included in the server row here; Rails’ small SVG under `app/` is in Application but in neither row. Differences are a few tens of lines at most.
+- Do **not** use this table alone to explain *why* the server row grows — that is the hand-SQL vs Active Record point in the next section.
 
 ## Architecture
 
