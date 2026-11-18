@@ -1,6 +1,6 @@
 # Comparisons
 
-Side-by-side notes across the three Conduit stacks.
+Side-by-side notes across the Conduit stacks (Rails / Hono / PHP today; Laravel + Inertia is in `apps/laravel-inertia` and can join comparison docs later).
 
 ## Documents
 
