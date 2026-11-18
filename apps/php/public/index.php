@@ -23,56 +23,68 @@ $popularTags = $articles->popularTags();
 $title = 'Home — Conduit';
 require dirname(__DIR__) . '/includes/header.php';
 ?>
-<div class="banner">
-    <div class="container">
-        <h1>conduit</h1>
-        <p>A place to share your knowledge.</p>
+<div class="home-page">
+    <div class="banner">
+        <div class="container">
+            <h1 class="logo-font">conduit</h1>
+            <p>A place to share your knowledge.</p>
+        </div>
+    </div>
+
+    <div class="container page">
+        <div class="row">
+            <div class="col-md-9">
+                <div class="feed-toggle">
+                    <ul class="nav nav-pills outline-active">
+                        <?php if ($viewer): ?>
+                            <li class="nav-item"><a class="nav-link" href="/feed.php">Your Feed</a></li>
+                        <?php endif; ?>
+                        <li class="nav-item">
+                            <a class="nav-link<?= $tag === null ? ' active' : '' ?>" href="/">Global Feed</a>
+                        </li>
+                        <?php if ($tag !== null): ?>
+                            <li class="nav-item">
+                                <a class="nav-link active" href="/?tag=<?= rawurlencode($tag) ?>">#<?= e($tag) ?></a>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+
+                <?php if ($feedArticles === []): ?>
+                    <div class="article-preview"><p class="empty-feed-message">No articles are here… yet.</p></div>
+                <?php else: ?>
+                    <?php foreach ($feedArticles as $article): ?>
+                        <?php require dirname(__DIR__) . '/includes/article_preview.php'; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+
+                <?php if ($totalPages > 1): ?>
+                    <ul class="pagination">
+                        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                            <?php $href = '/?' . http_build_query(array_filter(['tag' => $tag, 'page' => $i])); ?>
+                            <li class="page-item<?= $i === $page ? ' active' : '' ?>">
+                                <a class="page-link" href="<?= e($href) ?>"><?= $i ?></a>
+                            </li>
+                        <?php endfor; ?>
+                    </ul>
+                <?php endif; ?>
+            </div>
+
+            <div class="col-md-3">
+                <div class="sidebar">
+                    <p>Popular Tags</p>
+                    <?php if ($popularTags === []): ?>
+                        <p>No tags yet.</p>
+                    <?php else: ?>
+                        <div class="tag-list">
+                            <?php foreach ($popularTags as $popularTag): ?>
+                                <a class="tag-pill tag-default<?= $tag === $popularTag ? ' active' : '' ?>" href="/?tag=<?= rawurlencode($popularTag) ?>"><?= e($popularTag) ?></a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-<main class="container home-layout">
-    <section class="feed-column">
-        <ul class="feed-toggle">
-            <?php if ($viewer): ?>
-                <li><a href="/feed.php">Your Feed</a></li>
-            <?php endif; ?>
-            <li class="<?= $tag === null ? 'active' : '' ?>"><a href="/">Global Feed</a></li>
-            <?php if ($tag !== null): ?>
-                <li class="active"><a href="/?tag=<?= rawurlencode($tag) ?>">#<?= e($tag) ?></a></li>
-            <?php endif; ?>
-        </ul>
-
-        <p class="meta"><?= $articleCount ?> article<?= $articleCount === 1 ? '' : 's' ?></p>
-
-        <?php if ($feedArticles === []): ?>
-            <p class="empty">No articles are here… yet.</p>
-        <?php else: ?>
-            <?php foreach ($feedArticles as $article): ?>
-                <?php require dirname(__DIR__) . '/includes/article_preview.php'; ?>
-            <?php endforeach; ?>
-        <?php endif; ?>
-
-        <?php if ($totalPages > 1): ?>
-            <nav class="pagination">
-                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                    <?php $href = '/?' . http_build_query(array_filter(['tag' => $tag, 'page' => $i])); ?>
-                    <a class="<?= $i === $page ? 'active' : '' ?>" href="<?= e($href) ?>"><?= $i ?></a>
-                <?php endfor; ?>
-            </nav>
-        <?php endif; ?>
-    </section>
-
-    <aside class="sidebar">
-        <p class="sidebar-title">Popular Tags</p>
-        <?php if ($popularTags === []): ?>
-            <p class="empty">No tags yet.</p>
-        <?php else: ?>
-            <ul class="tag-list wrap">
-                <?php foreach ($popularTags as $popularTag): ?>
-                    <li><a href="/?tag=<?= rawurlencode($popularTag) ?>"><?= e($popularTag) ?></a></li>
-                <?php endforeach; ?>
-            </ul>
-        <?php endif; ?>
-    </aside>
-</main>
 <?php require dirname(__DIR__) . '/includes/footer.php'; ?>

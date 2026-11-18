@@ -33,8 +33,11 @@ foreach ($feedArticles as $article) {
     require dirname(__DIR__) . '/includes/article_preview.php';
 }
 if ($feedArticles === []) {
-    echo '<p class="empty">No articles yet.</p>';
+    echo '<div class="article-preview"><p class="empty-feed-message">No articles yet.</p></div>';
 }
 ?>
-</main>
+            </div>
+        </div>
+    </div>
+</div>
 <?php require dirname(__DIR__) . '/includes/footer.php'; ?>

@@ -35,21 +35,31 @@ $alert = $session->pullFlash('alert');
 $title = 'Sign in — Conduit';
 require dirname(__DIR__) . '/includes/header.php';
 ?>
-<main class="auth-page">
-    <h1>Sign in</h1>
-    <p class="sub"><a href="/register.php">Need an account?</a></p>
+<div class="auth-page">
+    <div class="container page">
+        <div class="row">
+            <div class="col-md-6 offset-md-3 col-xs-12">
+                <h1 class="text-xs-center">Sign in</h1>
+                <p class="text-xs-center"><a href="/register.php">Need an account?</a></p>
 
-    <?php if ($error !== null): ?>
-        <div class="error"><?= e($error) ?></div>
-    <?php endif; ?>
+                <?php if ($error !== null): ?>
+                    <ul class="error-messages"><li><?= e($error) ?></li></ul>
+                <?php endif; ?>
 
-    <form method="post" action="/login.php">
-        <input type="hidden" name="_csrf" value="<?= e($csrfToken) ?>">
-        <label for="email">Email</label>
-        <input id="email" type="email" name="email" value="<?= e($email) ?>" required autocomplete="username">
-        <label for="password">Password</label>
-        <input id="password" type="password" name="password" required autocomplete="current-password">
-        <button class="button" type="submit">Sign in</button>
-    </form>
-</main>
+                <form method="post" action="/login.php">
+                    <input type="hidden" name="_csrf" value="<?= e($csrfToken) ?>">
+                    <fieldset class="form-group">
+                        <label for="email">Email</label>
+                        <input id="email" class="form-control form-control-lg" type="email" name="email" value="<?= e($email) ?>" required autocomplete="username" placeholder="Email">
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <label for="password">Password</label>
+                        <input id="password" class="form-control form-control-lg" type="password" name="password" required autocomplete="current-password" placeholder="Password">
+                    </fieldset>
+                    <button class="btn btn-lg btn-primary pull-xs-right" type="submit">Sign in</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <?php require dirname(__DIR__) . '/includes/footer.php'; ?>
