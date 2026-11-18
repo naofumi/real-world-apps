@@ -1,14 +1,15 @@
-# Testing strategies — Rails ERB / React+Hono / PHP
+# Testing strategies — Rails ERB / React+Hono / PHP / Go+HTMX
 
-Qualitative comparison of how the three RealWorld (Conduit) apps under `apps/` choose test layers. Based on each app’s stated strategy (`AGENTS.md`, README test sections, `.cursor/rules`, architecture/features docs, CI) and spot-checks of representative suites — not on test size or LoC.
+Qualitative comparison of how the RealWorld (Conduit) apps under `apps/` choose test layers. Based on each app’s stated strategy (`AGENTS.md`, README test sections, `.cursor/rules`, architecture/features docs, CI) and spot-checks of representative suites — not on test size or LoC.
 
-For architecture and measured LoC, see [`rails-hono-php.md`](./rails-hono-php.md).
+For architecture and measured LoC (Rails / Hono / PHP only so far), see [`rails-hono-php.md`](./rails-hono-php.md).
 
 | App | Path |
 | --- | --- |
 | Rails ERB | [`apps/rails-erb`](../../apps/rails-erb) |
 | React + Hono | [`apps/react-hono`](../../apps/react-hono) |
 | PHP page scripts | [`apps/php`](../../apps/php) |
+| Go + HTMX | [`apps/go-htmx`](../../apps/go-htmx) |
 
 ---
 
@@ -87,31 +88,56 @@ Classic page scripts have no router/controller framework seam. Repositories (pla
 
 ---
 
+## Go + HTMX (`apps/go-htmx`)
+
+**Layers**
+
+1. **sqlc / DB tests** — `go test ./internal/db/...` on in-memory SQLite + goose. Favorites count, feed-from-follows, and similar SQL behavior.
+2. **httptest handlers** — thin request tests for register/login CSRF + session cookies (`internal/httpx`). Not a full matrix of every template.
+3. **Browser E2E** — Playwright against `go run ./cmd/server` and a reseeded `storage/e2e.sqlite3`. Auth, feeds/tags, publish, favorite, follow, comments.
+
+**What they deliberately do not unit-test**
+
+Every template partial. `AGENTS.md` keeps Go tests at SQL + a thin HTTP seam; HTML flows belong to Playwright (same philosophy as PHP/Hono page coverage).
+
+**Auth / DB / fixtures**
+
+- **Auth:** Cookie sessions + CSRF. E2E signs in through `/login`.
+- **DB:** Unit/httptest use shared in-memory SQLite; E2E uses `APP_DATABASE_PATH` + `go run ./cmd/seed`.
+- **CI:** README scripts (`go test ./...`, `npm run test:e2e`); no app workflow in the monorepo root yet.
+
+**Why it fits**
+
+SSR + HTMX is closer to Rails/PHP than to the Hono SPA. sqlc is the cheap data seam (like PHP repositories); chi+`httptest` covers CSRF/session without a browser; Playwright proves resourceful URLs and HTMX swaps.
+
+---
+
 ## Cross-cutting comparison
 
 **Shared philosophies**
 
-- Prefer **real browser coverage** for multi-step Conduit flows over mock-heavy UI tests (stated most clearly for Hono and PHP; Rails uses system tests for the same job).
-- Keep a **fast, DB-backed** non-browser layer for data and/or HTTP rules (Rails controllers + Ability; Hono API contract/queries/permissions; PHP repositories).
+- Prefer **real browser coverage** for multi-step Conduit flows over mock-heavy UI tests (stated most clearly for Hono and PHP; Rails uses system tests for the same job; Go+HTMX follows Playwright).
+- Keep a **fast, DB-backed** non-browser layer for data and/or HTTP rules (Rails controllers + Ability; Hono API contract/queries/permissions; PHP repositories; Go sqlc + httptest).
 - **SQLite everywhere**; E2E (or system) runs against a dedicated/fresh DB, not the developer’s long-lived file.
 - **Seeded demo users** for browser flows; Rails additionally uses YAML fixtures for its integration/system suite.
-- None of the three treat page/UI scripts as the primary unit-test target once a cheaper seam exists (or, for PHP, once E2E owns the page story).
+- None treat page/UI scripts as the primary unit-test target once a cheaper seam exists (or, for PHP/Go, once E2E owns the page story).
 
 **Real differences**
 
-| Dimension | Rails | Hono | PHP |
-| --- | --- | --- | --- |
-| Middle request layer | Rich controller integration + HTML assertions | In-process API contract (JSON), not HTML | None by design |
-| Authorization tests | `Ability` unit + controller redirects | Pure `permissions` helpers + contract JSON shapes | Inline in page scripts; exercised via E2E |
-| Client / UI isolation | ERB checked via integration/`assert_select` | Vitest only for thin seams | No page-script unit tests |
-| Browser tool | Capybara / Selenium (Rails system) | Playwright | Playwright |
-| Auth under test | Signed session cookie (+ form in system) | JWT bearer / SPA login | Session cookie + CSRF forms |
-| Documented CI posture | GH Actions: `test` + `test:system` | README scripts | README scripts |
+| Dimension | Rails | Hono | PHP | Go + HTMX |
+| --- | --- | --- | --- | --- |
+| Middle request layer | Rich controller integration + HTML assertions | In-process API contract (JSON), not HTML | None by design | Light `httptest` (auth/CSRF), not full HTML matrix |
+| Authorization tests | `Ability` unit + controller redirects | Pure `permissions` helpers + contract JSON shapes | Inline in page scripts; exercised via E2E | Inline in handlers; E2E + occasional httptest |
+| Client / UI isolation | ERB checked via integration/`assert_select` | Vitest only for thin seams | No page-script unit tests | No template unit tests |
+| Browser tool | Capybara / Selenium (Rails system) | Playwright | Playwright | Playwright |
+| Auth under test | Signed session cookie (+ form in system) | JWT bearer / SPA login | Session cookie + CSRF forms | Session cookie + CSRF forms |
+| Documented CI posture | GH Actions: `test` + `test:system` | README scripts | README scripts | README scripts |
 
 **How the product architecture drives the matrix**
 
 - **SSR forms (Rails)** → controller integration is high leverage; system tests fill Turbo/mail gaps.
 - **SPA + RealWorld API (Hono)** → contract + query tests own the server; Playwright owns pages; Vitest stays small.
 - **Page scripts (PHP)** → repository PHPUnit + Playwright only; avoiding a homemade controller-test harness is an explicit style choice.
+- **Go + HTMX** → sqlc + thin httptest + Playwright; HTMX swaps covered in the browser like Turbo.
 
 Test *volume* across stacks is not a quality score: the suites optimize for different seams and are not aligned to the same bar. Compare strategies by which layer answers which failure mode (wrong SQL, wrong HTTP contract, wrong form/CSRF/redirect, wrong SPA wiring), not by how large the trees are.

@@ -1,0 +1,42 @@
+{{define "content"}}
+{{$c := .Content}}
+{{$a := $c.Article}}
+<div class="editor-page">
+  <div class="container page">
+    <div class="row">
+      <div class="col-md-10 offset-md-1 col-xs-12">
+        <h1 class="text-xs-center">{{if $c.IsNew}}New Article{{else}}Edit Article{{end}}</h1>
+        {{if $c.Errors}}
+        <ul class="error-messages">
+          {{range $c.Errors}}<li>{{.}}</li>{{end}}
+        </ul>
+        {{end}}
+        <form method="post" action="{{$c.Action}}">
+          <input type="hidden" name="_csrf" value="{{$.CSRF}}">
+          <fieldset>
+            <fieldset class="form-group">
+              <input class="form-control form-control-lg" type="text" name="title"
+                     placeholder="Article Title" value="{{index $a "Title"}}" required>
+            </fieldset>
+            <fieldset class="form-group">
+              <input class="form-control" type="text" name="description"
+                     placeholder="What's this article about?" value="{{index $a "Description"}}" required>
+            </fieldset>
+            <fieldset class="form-group">
+              <textarea class="form-control" rows="8" name="body"
+                        placeholder="Write your article (in markdown)" required>{{index $a "Body"}}</textarea>
+            </fieldset>
+            <fieldset class="form-group">
+              <input class="form-control" type="text" name="tagList"
+                     placeholder="Enter tags" value="{{$c.Tags}}">
+            </fieldset>
+            <button class="btn btn-lg btn-primary pull-xs-right" type="submit">
+              {{if $c.IsNew}}Publish Article{{else}}Update Article{{end}}
+            </button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}

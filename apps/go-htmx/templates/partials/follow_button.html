@@ -1,0 +1,23 @@
+{{define "follow_button"}}
+{{if .Following}}
+<form method="post" action="/users/{{.Username}}/unfollow"
+      hx-post="/users/{{.Username}}/unfollow"
+      hx-swap="outerHTML"
+      hx-target="this">
+  <input type="hidden" name="_csrf" value="{{.CSRF}}">
+  <button type="submit" class="btn btn-sm btn-secondary">
+    <i class="ion-plus-round"></i>&nbsp;Unfollow {{.Username}}
+  </button>
+</form>
+{{else}}
+<form method="post" action="/users/{{.Username}}/follow"
+      hx-post="/users/{{.Username}}/follow"
+      hx-swap="outerHTML"
+      hx-target="this">
+  <input type="hidden" name="_csrf" value="{{.CSRF}}">
+  <button type="submit" class="btn btn-sm btn-outline-secondary">
+    <i class="ion-plus-round"></i>&nbsp;Follow {{.Username}}
+  </button>
+</form>
+{{end}}
+{{end}}

@@ -1,0 +1,63 @@
+{{define "base.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700|Lora:400,700">
+  <link rel="stylesheet" href="/static/css/conduit.css">
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+</head>
+<body>
+  <nav class="navbar navbar-light">
+    <div class="container">
+      <a class="navbar-brand" href="/">conduit</a>
+      <ul class="nav navbar-nav pull-xs-right">
+        <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+        {{if .Viewer}}
+          <li class="nav-item">
+            <a class="nav-link" href="/articles/new"><i class="ion-compose"></i>&nbsp;New Article</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/settings"><i class="ion-gear-a"></i>&nbsp;Settings</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/users/{{.Viewer.Username}}">
+              <img class="user-pic" src="{{.Viewer.ImageURL}}" alt="">
+              {{.Viewer.Username}}
+            </a>
+          </li>
+          <li class="nav-item">
+            <form method="post" action="/logout" style="display:inline">
+              <input type="hidden" name="_csrf" value="{{.CSRF}}">
+              <button class="nav-link" type="submit" style="background:none;border:none;cursor:pointer">Sign out</button>
+            </form>
+          </li>
+        {{else}}
+          <li class="nav-item"><a class="nav-link" href="/login">Sign in</a></li>
+          <li class="nav-item"><a class="nav-link" href="/register">Sign up</a></li>
+        {{end}}
+      </ul>
+    </div>
+  </nav>
+
+  {{if .Flash}}
+    <div class="container"><div class="flash notice">{{.Flash}}</div></div>
+  {{end}}
+  {{if .Alert}}
+    <div class="container"><div class="flash alert">{{.Alert}}</div></div>
+  {{end}}
+
+  {{template "content" .}}
+
+  <footer>
+    <div class="container">
+      <a href="/" class="logo-font">conduit</a>
+      <span class="attribution">A place to share your knowledge.</span>
+    </div>
+  </footer>
+</body>
+</html>
+{{end}}

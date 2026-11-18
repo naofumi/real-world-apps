@@ -1,0 +1,29 @@
+APP_ROOT := $(CURDIR)
+export APP_ROOT
+export PATH := $(shell go env GOPATH)/bin:$(PATH)
+
+.PHONY: sqlc migrate seed run test test-e2e tidy
+
+sqlc:
+	sqlc generate
+
+migrate:
+	go run ./cmd/server -h >/dev/null 2>&1 || true
+	@mkdir -p storage
+	@# migrations run on server/seed open; this target just ensures DB exists via seed-less open
+	go run ./cmd/seed
+
+seed:
+	go run ./cmd/seed
+
+run:
+	go run ./cmd/server
+
+test:
+	go test ./...
+
+test-e2e:
+	npm test
+
+tidy:
+	go mod tidy

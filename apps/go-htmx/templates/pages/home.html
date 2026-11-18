@@ -1,0 +1,59 @@
+{{define "content"}}
+{{$c := .Content}}
+<div class="home-page">
+  <div class="banner">
+    <div class="container">
+      <h1 class="logo-font">conduit</h1>
+      <p>A place to share your knowledge.</p>
+    </div>
+  </div>
+
+  <div class="container page">
+    <div class="row">
+      <div class="col-md-9">
+        <div class="feed-toggle">
+          <ul class="nav nav-pills outline-active">
+            {{if $.Viewer}}
+            <li class="nav-item">
+              <a class="nav-link{{if eq $c.Mode "feed"}} active{{end}}" href="/feed">Your Feed</a>
+            </li>
+            {{end}}
+            <li class="nav-item">
+              <a class="nav-link{{if eq $c.Mode "global"}} active{{end}}" href="/">Global Feed</a>
+            </li>
+            {{if eq $c.Mode "tag"}}
+            <li class="nav-item">
+              <a class="nav-link active" href="/?tag={{$c.Tag}}">#{{$c.Tag}}</a>
+            </li>
+            {{end}}
+          </ul>
+        </div>
+
+        {{if eq $c.Mode "feed"}}
+          <h2 class="visually-hidden">Your Feed</h2>
+        {{else if eq $c.Mode "tag"}}
+          <h2 class="visually-hidden">Tag: {{$c.Tag}}</h2>
+        {{else}}
+          <h2 class="visually-hidden">Global Feed</h2>
+        {{end}}
+
+        {{range $c.Articles}}
+          {{template "article_preview" .}}
+        {{else}}
+          <div class="article-preview empty-feed-message">No articles are here... yet.</div>
+        {{end}}
+      </div>
+      <div class="col-md-3">
+        <div class="sidebar">
+          <p>Popular Tags</p>
+          <div class="tag-list">
+            {{range $c.Tags}}
+              <a href="/?tag={{.}}" class="tag-default tag-pill">{{.}}</a>
+            {{end}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}
