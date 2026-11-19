@@ -39,3 +39,7 @@ Do not unit-test every template partial. Prefer E2E for HTML flows; keep Go test
 go run ./cmd/seed
 go run ./cmd/server   # http://127.0.0.1:8090
 ```
+
+## Learning the codebase
+
+If you are new to Go or chi, read [`docs/go-tour.md`](./docs/go-tour.md) (maps this tree to Rails/PHP/Laravel ideas and walks login + favorite).

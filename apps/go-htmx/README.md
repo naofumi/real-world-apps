@@ -8,6 +8,8 @@ Run all commands from this directory (`apps/go-htmx`).
 
 Agent notes: [`AGENTS.md`](./AGENTS.md).
 
+New to Go / chi? Start with the guided tour: [`docs/go-tour.md`](./docs/go-tour.md).
+
 ## Stack
 
 | Piece | Choice |
