@@ -1,5 +1,7 @@
 # Rails ERB / React+Hono / PHP — three-way comparison
 
+> **Superseded for day-to-day reading:** the five-stack update (adds Go + HTMX and Laravel + Inertia) lives in [`conduit-stacks.md`](./conduit-stacks.md). This page remains as the original three-way writeup.
+
 Same Conduit (RealWorld) product surface in three stacks under `apps/`. Numbers are fresh `cloc` on this monorepo (git-tracked sources). Exclusions match prior Rails-vs-Hono notes: no `node_modules`, lockfiles, or generated Drizzle migration snapshots; vendored Conduit Minimal CSS is listed separately, not in “application.”
 
 | App | Path |
@@ -21,7 +23,7 @@ Same Conduit (RealWorld) product surface in three stacks under `apps/`. Numbers 
 | Application | ~1,082 | ~3,028 (~2.8× Rails) | ~1,733 (~1.6× Rails) |
 | Tests | ~592 | ~1,105 | ~314 |
 | App + tests | ~1,674 | ~4,133 | ~2,047 |
-| Vendored Conduit CSS | 1,205 | 1,205 | 1,205 |
+| Vendored Conduit CSS | 1,205 | 1,205 | — (custom `app.css` ~313) |
 
 Method notes:
 
@@ -163,7 +165,7 @@ Test LoC is highest on Hono largely because of a large API contract/query suite 
 ## Notable asymmetries
 
 - Password reset exists only in Rails.
-- Rails, Hono, and PHP vendor the same Conduit Minimal CSS (~1,205 code lines). PHP keeps a thin `public/css/app.css` glue layer (flash + inline forms), matching Rails `application.css`.
+- Rails + Hono vendor the same Conduit Minimal CSS (~1,205 code lines). PHP ships a smaller custom `public/css/app.css`.
 - Favorite UX: Turbo Stream partial (Rails) vs client mutation (Hono) vs full redirect (PHP).
 - Comment delete: Rails Ability = comment author; PHP also lets the article author delete comments on their article.
 - Hono implements the published RealWorld HTTP API; Rails and PHP optimize for HTML page scripts/controllers instead.

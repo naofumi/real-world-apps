@@ -1,8 +1,8 @@
-# Testing strategies — Rails ERB / React+Hono / PHP / Go+HTMX
+# Testing strategies — five Conduit stacks
 
 Qualitative comparison of how the RealWorld (Conduit) apps under `apps/` choose test layers. Based on each app’s stated strategy (`AGENTS.md`, README test sections, `.cursor/rules`, architecture/features docs, CI) and spot-checks of representative suites — not on test size or LoC.
 
-For architecture and measured LoC (Rails / Hono / PHP only so far), see [`rails-hono-php.md`](./rails-hono-php.md).
+For architecture and measured LoC, see [`conduit-stacks.md`](./conduit-stacks.md) (older three-way: [`rails-hono-php.md`](./rails-hono-php.md)).
 
 | App | Path |
 | --- | --- |
@@ -10,6 +10,7 @@ For architecture and measured LoC (Rails / Hono / PHP only so far), see [`rails-
 | React + Hono | [`apps/react-hono`](../../apps/react-hono) |
 | PHP page scripts | [`apps/php`](../../apps/php) |
 | Go + HTMX | [`apps/go-htmx`](../../apps/go-htmx) |
+| Laravel + Inertia | [`apps/laravel-inertia`](../../apps/laravel-inertia) |
 
 ---
 
@@ -112,32 +113,56 @@ SSR + HTMX is closer to Rails/PHP than to the Hono SPA. sqlc is the cheap data s
 
 ---
 
+## Laravel + Inertia (`apps/laravel-inertia`)
+
+**Layers**
+
+1. **Feature / HTTP tests** — `php artisan test` under `tests/Feature/`. Hit controllers with session auth; assert redirects, authorization (Policies), and Inertia page props where useful. Main non-browser safety net (Rails-like).
+2. **Browser E2E** — Playwright against `artisan serve` + seeded SQLite. A smaller suite than PHP/Go today: login, feed/tag, publish. README prefers Playwright over Dusk for monorepo consistency.
+
+**What they deliberately do not unit-test**
+
+Inertia page components and Breeze leftovers as a Vitest/jsdom matrix. `AGENTS.md`: prefer Feature tests for server/policies; Playwright for a few UI flows; do not extract controllers solely for unit tests.
+
+**Auth / DB / fixtures**
+
+- **Auth:** Laravel session + CSRF; Feature tests authenticate via helpers; E2E uses the login form. Password reset exists (Breeze) — covered more in Feature tests than E2E so far.
+- **DB:** RefreshDatabase / migrations for Feature tests; E2E seeds a dedicated DB per README.
+- **CI:** README scripts; no monorepo-root workflow yet.
+
+**Why it fits**
+
+Laravel gives a cheap controller/Inertia assertion seam (like Rails integration tests). The React pages are still “real browser” territory for multi-step UI, so Playwright mirrors Hono/PHP/Go without introducing Dusk as a second browser stack.
+
+---
+
 ## Cross-cutting comparison
 
 **Shared philosophies**
 
-- Prefer **real browser coverage** for multi-step Conduit flows over mock-heavy UI tests (stated most clearly for Hono and PHP; Rails uses system tests for the same job; Go+HTMX follows Playwright).
-- Keep a **fast, DB-backed** non-browser layer for data and/or HTTP rules (Rails controllers + Ability; Hono API contract/queries/permissions; PHP repositories; Go sqlc + httptest).
+- Prefer **real browser coverage** for multi-step Conduit flows over mock-heavy UI tests (Hono/PHP/Go/Laravel Playwright; Rails system tests).
+- Keep a **fast, DB-backed** non-browser layer for data and/or HTTP rules (Rails controllers + Ability; Hono API contract; PHP repositories; Go sqlc + httptest; Laravel Feature + Policies).
 - **SQLite everywhere**; E2E (or system) runs against a dedicated/fresh DB, not the developer’s long-lived file.
 - **Seeded demo users** for browser flows; Rails additionally uses YAML fixtures for its integration/system suite.
-- None treat page/UI scripts as the primary unit-test target once a cheaper seam exists (or, for PHP/Go, once E2E owns the page story).
+- None treat full page/UI scripts as the primary unit-test target once a cheaper seam exists.
 
 **Real differences**
 
-| Dimension | Rails | Hono | PHP | Go + HTMX |
-| --- | --- | --- | --- | --- |
-| Middle request layer | Rich controller integration + HTML assertions | In-process API contract (JSON), not HTML | None by design | Light `httptest` (auth/CSRF), not full HTML matrix |
-| Authorization tests | `Ability` unit + controller redirects | Pure `permissions` helpers + contract JSON shapes | Inline in page scripts; exercised via E2E | Inline in handlers; E2E + occasional httptest |
-| Client / UI isolation | ERB checked via integration/`assert_select` | Vitest only for thin seams | No page-script unit tests | No template unit tests |
-| Browser tool | Capybara / Selenium (Rails system) | Playwright | Playwright | Playwright |
-| Auth under test | Signed session cookie (+ form in system) | JWT bearer / SPA login | Session cookie + CSRF forms | Session cookie + CSRF forms |
-| Documented CI posture | GH Actions: `test` + `test:system` | README scripts | README scripts | README scripts |
+| Dimension | Rails | Hono | PHP | Go + HTMX | Laravel |
+| --- | --- | --- | --- | --- | --- |
+| Middle request layer | Rich controller integration + HTML assertions | In-process API contract (JSON), not HTML | None by design | Light `httptest` (auth/CSRF) | Feature tests + Inertia prop assertions |
+| Authorization tests | `Ability` unit + controller redirects | Pure `permissions` helpers + contract JSON | Inline in pages; E2E | Inline in handlers; E2E | Policy + Feature tests |
+| Client / UI isolation | ERB via integration/`assert_select` | Vitest for thin seams | No page-script units | No template units | No Inertia page unit matrix |
+| Browser tool | Capybara / Selenium | Playwright | Playwright | Playwright | Playwright |
+| Auth under test | Signed session cookie | JWT / SPA login | Session + CSRF | Session + CSRF | Session + CSRF (+ reset) |
+| Documented CI posture | GH Actions: `test` + `test:system` | README scripts | README scripts | README scripts | README scripts |
 
 **How the product architecture drives the matrix**
 
 - **SSR forms (Rails)** → controller integration is high leverage; system tests fill Turbo/mail gaps.
 - **SPA + RealWorld API (Hono)** → contract + query tests own the server; Playwright owns pages; Vitest stays small.
-- **Page scripts (PHP)** → repository PHPUnit + Playwright only; avoiding a homemade controller-test harness is an explicit style choice.
-- **Go + HTMX** → sqlc + thin httptest + Playwright; HTMX swaps covered in the browser like Turbo.
+- **Page scripts (PHP)** → repository PHPUnit + Playwright only.
+- **Go + HTMX** → sqlc + thin httptest + Playwright; HTMX swaps covered in the browser.
+- **Laravel + Inertia** → Feature/Policy tests like Rails; Playwright for a few React UI flows (not Dusk).
 
 Test *volume* across stacks is not a quality score: the suites optimize for different seams and are not aligned to the same bar. Compare strategies by which layer answers which failure mode (wrong SQL, wrong HTTP contract, wrong form/CSRF/redirect, wrong SPA wiring), not by how large the trees are.
