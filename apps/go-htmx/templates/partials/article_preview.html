@@ -1,0 +1,28 @@
+{{define "article_preview"}}
+<div class="article-preview">
+  <div class="article-meta">
+    <a href="/users/{{.AuthorUsername}}">
+      <img src="{{defaultImage .AuthorImage}}" alt="">
+    </a>
+    <div class="info">
+      <a class="author" href="/users/{{.AuthorUsername}}">{{.AuthorUsername}}</a>
+      <span class="date">{{formatDate .CreatedAt}}</span>
+    </div>
+    {{if .CSRF}}
+    <div class="favorite favorite--compact pull-xs-right" id="fav-{{.Slug}}">
+      {{template "favorite_button" .}}
+    </div>
+    {{end}}
+  </div>
+  <a class="preview-link" href="/articles/{{.Slug}}">
+    <h1>{{.Title}}</h1>
+    <p>{{.Description}}</p>
+    <span>Read more...</span>
+    <ul class="tag-list">
+      {{range .Tags}}
+        <li class="tag-default tag-pill tag-outline">{{.}}</li>
+      {{end}}
+    </ul>
+  </a>
+</div>
+{{end}}

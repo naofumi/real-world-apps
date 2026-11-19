@@ -1,0 +1,44 @@
+{{define "content"}}
+{{$c := .Content}}
+{{$u := $c.User}}
+<div class="settings-page">
+  <div class="container page">
+    <div class="row">
+      <div class="col-md-6 offset-md-3 col-xs-12">
+        <h1 class="text-xs-center">Your Settings</h1>
+        {{if $c.Errors}}
+        <ul class="error-messages">
+          {{range $c.Errors}}<li>{{.}}</li>{{end}}
+        </ul>
+        {{end}}
+        <form method="post" action="/settings">
+          <input type="hidden" name="_csrf" value="{{$.CSRF}}">
+          <fieldset>
+            <fieldset class="form-group">
+              <input class="form-control" type="text" name="image" placeholder="URL of profile picture"
+                     value="{{if $u.Image.Valid}}{{$u.Image.String}}{{end}}">
+            </fieldset>
+            <fieldset class="form-group">
+              <input class="form-control form-control-lg" type="text" name="username" placeholder="Your Username"
+                     value="{{$u.Username}}" required>
+            </fieldset>
+            <fieldset class="form-group">
+              <textarea class="form-control form-control-lg" rows="8" name="bio"
+                        placeholder="Short bio about you">{{if $u.Bio.Valid}}{{$u.Bio.String}}{{end}}</textarea>
+            </fieldset>
+            <fieldset class="form-group">
+              <input class="form-control form-control-lg" type="email" name="email" placeholder="Email"
+                     value="{{$u.Email}}" required>
+            </fieldset>
+            <fieldset class="form-group">
+              <input class="form-control form-control-lg" type="password" name="password"
+                     placeholder="New Password">
+            </fieldset>
+            <button class="btn btn-lg btn-primary pull-xs-right" type="submit">Update Settings</button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}

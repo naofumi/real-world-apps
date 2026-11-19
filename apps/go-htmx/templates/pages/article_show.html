@@ -1,0 +1,98 @@
+{{define "content"}}
+{{$c := .Content}}
+{{$a := $c.Article}}
+<div class="article-page">
+  <div class="banner">
+    <div class="container">
+      <h1>{{$a.Title}}</h1>
+      <div class="article-meta">
+        <a href="/users/{{$a.AuthorUsername}}">
+          <img src="{{defaultImage $a.AuthorImage}}" alt="">
+        </a>
+        <div class="info">
+          <a class="author" href="/users/{{$a.AuthorUsername}}">{{$a.AuthorUsername}}</a>
+          <span class="date">{{formatDate $a.CreatedAt}}</span>
+        </div>
+        {{if $c.IsOwner}}
+          <a class="btn btn-sm btn-outline-secondary" href="/articles/{{$a.Slug}}/edit">
+            <i class="ion-edit"></i> Edit Article
+          </a>
+          <form method="post" action="/articles/{{$a.Slug}}/delete" style="display:inline">
+            <input type="hidden" name="_csrf" value="{{$.CSRF}}">
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              <i class="ion-trash-a"></i> Delete Article
+            </button>
+          </form>
+        {{else if $.Viewer}}
+          <div style="display:inline-block;margin-right:.5rem">
+            {{template "follow_button" $c.Follow}}
+          </div>
+          {{template "favorite_button" $c.Favorite}}
+        {{end}}
+      </div>
+    </div>
+  </div>
+
+  <div class="container page">
+    <div class="row article-content">
+      <div class="col-md-12">
+        {{markdown $a.Body}}
+        <ul class="tag-list">
+          {{range $a.Tags}}
+            <li class="tag-default tag-pill tag-outline"><a href="/?tag={{.}}">{{.}}</a></li>
+          {{end}}
+        </ul>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+      <div class="col-xs-12 col-md-8 offset-md-2">
+        {{if $.Viewer}}
+          <form method="post" action="/articles/{{$a.Slug}}/comments" class="card comment-form">
+            <input type="hidden" name="_csrf" value="{{$.CSRF}}">
+            <div class="card-block">
+              <textarea class="form-control" rows="3" name="body" placeholder="Write a comment..." required></textarea>
+            </div>
+            <div class="card-footer">
+              <img src="{{$.Viewer.ImageURL}}" class="comment-author-img" alt="">
+              <button class="btn btn-sm btn-primary" type="submit">Post Comment</button>
+            </div>
+          </form>
+        {{else}}
+          <p>
+            <a href="/login">Sign in</a> or <a href="/register">sign up</a> to add comments on this article.
+          </p>
+        {{end}}
+
+        {{range $c.Comments}}
+        <div class="card">
+          <div class="card-block">
+            <p class="card-text">{{.Body}}</p>
+          </div>
+          <div class="card-footer">
+            <a href="/users/{{.AuthorUsername}}" class="comment-author">
+              <img src="{{defaultImage .AuthorImage}}" class="comment-author-img" alt="">
+            </a>
+            &nbsp;
+            <a href="/users/{{.AuthorUsername}}" class="comment-author">{{.AuthorUsername}}</a>
+            <span class="date-posted">{{formatDate .CreatedAt}}</span>
+            {{if and $.Viewer (eq $.Viewer.ID .UserID)}}
+            <span class="mod-options">
+              <form method="post" action="/comments/{{.ID}}/delete" style="display:inline">
+                <input type="hidden" name="_csrf" value="{{$.CSRF}}">
+                <button type="submit" style="background:none;border:none;cursor:pointer;padding:0" aria-label="Delete comment">
+                  <i class="ion-trash-a"></i>
+                </button>
+              </form>
+            </span>
+            {{end}}
+          </div>
+        </div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}

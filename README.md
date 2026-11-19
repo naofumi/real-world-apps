@@ -8,6 +8,7 @@ Comparison monorepo for [RealWorld](https://realworld-docs.netlify.app/) (Condui
 | React + Hono | [`apps/react-hono`](./apps/react-hono) | React SPA, Hono API, Drizzle, SQLite |
 | PHP | [`apps/php`](./apps/php) | PHP 8.4 page scripts, PDO + SQLite |
 | Laravel + Inertia | [`apps/laravel-inertia`](./apps/laravel-inertia) | Laravel, Inertia + React, Policies, SQLite |
+| Go + HTMX | [`apps/go-htmx`](./apps/go-htmx) | chi, html/template, HTMX, sqlc + SQLite |
 
 Cross-stack comparison writeups live in [`docs/`](./docs). Three-way LoC and architecture note: [`docs/comparisons/rails-hono-php.md`](./docs/comparisons/rails-hono-php.md).
 
@@ -27,6 +28,9 @@ cd apps/php && composer install && php bin/migrate && php bin/seed && php bin/de
 
 # Laravel + Inertia → http://127.0.0.1:8000
 cd apps/laravel-inertia && composer install && php artisan migrate --seed && npm install && npm run build && php artisan serve
+
+# Go + HTMX → http://127.0.0.1:8090
+cd apps/go-htmx && go run ./cmd/seed && go run ./cmd/server
 ```
 
 ## Source remotes (pre-monorepo)
@@ -36,3 +40,5 @@ Standalone repos are still available; this monorepo imports them under `apps/` (
 - https://github.com/naofumi/real-world-app-rails-erb
 - https://github.com/naofumi/real-world-app-react-hono
 - https://github.com/naofumi/real-world-app-php
+
+`apps/laravel-inertia` and `apps/go-htmx` are native to this monorepo.

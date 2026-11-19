@@ -1,0 +1,35 @@
+{{define "favorite_button"}}
+{{if .Favorited}}
+<form method="post" action="/articles/{{.Slug}}/unfavorite"
+      hx-post="/articles/{{.Slug}}/unfavorite"
+      hx-swap="outerHTML"
+      hx-target="this">
+  <input type="hidden" name="_csrf" value="{{.CSRF}}">
+  {{if .Compact}}<input type="hidden" name="compact" value="1">{{end}}
+  <button type="submit" class="btn btn-sm btn-primary" aria-label="Unfavorite {{.Title}}">
+    <i class="ion-heart"></i>
+    {{if .Compact}}
+      <span class="favorite__count">{{.FavoritesCount}}</span>
+    {{else}}
+      &nbsp;Unfavorite Article <span class="counter">({{.FavoritesCount}})</span>
+    {{end}}
+  </button>
+</form>
+{{else}}
+<form method="post" action="/articles/{{.Slug}}/favorite"
+      hx-post="/articles/{{.Slug}}/favorite"
+      hx-swap="outerHTML"
+      hx-target="this">
+  <input type="hidden" name="_csrf" value="{{.CSRF}}">
+  {{if .Compact}}<input type="hidden" name="compact" value="1">{{end}}
+  <button type="submit" class="btn btn-sm btn-outline-primary" aria-label="Favorite {{.Title}}">
+    <i class="ion-heart"></i>
+    {{if .Compact}}
+      <span class="favorite__count">{{.FavoritesCount}}</span>
+    {{else}}
+      &nbsp;Favorite Article <span class="counter">({{.FavoritesCount}})</span>
+    {{end}}
+  </button>
+</form>
+{{end}}
+{{end}}

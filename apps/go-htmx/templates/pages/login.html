@@ -1,0 +1,30 @@
+{{define "content"}}
+{{$c := .Content}}
+<div class="auth-page">
+  <div class="container page">
+    <div class="row">
+      <div class="col-md-6 offset-md-3 col-xs-12">
+        <h1 class="text-xs-center">Sign in</h1>
+        <p class="text-xs-center"><a href="/register">Need an account?</a></p>
+        {{if $c.Errors}}
+        <ul class="error-messages">
+          {{range $c.Errors}}<li>{{.}}</li>{{end}}
+        </ul>
+        {{end}}
+        <form method="post" action="/login">
+          <input type="hidden" name="_csrf" value="{{$.CSRF}}">
+          <fieldset class="form-group">
+            <input class="form-control form-control-lg" type="email" id="email" name="email"
+                   placeholder="Email" value="{{$c.Email}}" required>
+          </fieldset>
+          <fieldset class="form-group">
+            <input class="form-control form-control-lg" type="password" id="password" name="password"
+                   placeholder="Password" required>
+          </fieldset>
+          <button class="btn btn-lg btn-primary pull-xs-right" type="submit">Sign in</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}

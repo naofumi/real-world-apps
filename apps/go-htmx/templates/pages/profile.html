@@ -1,0 +1,48 @@
+{{define "content"}}
+{{$c := .Content}}
+{{$p := $c.Profile}}
+<div class="profile-page">
+  <div class="user-info">
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12 col-md-10 offset-md-1">
+          <img src="{{defaultImage (nullStr $p.Image)}}" class="user-img" alt="">
+          <h4>{{$p.Username}}</h4>
+          <p>{{nullStr $p.Bio}}</p>
+          {{if $c.IsSelf}}
+            <a class="btn btn-sm btn-outline-secondary action-btn" href="/settings">
+              <i class="ion-gear-a"></i>&nbsp;Edit Profile Settings
+            </a>
+          {{else if $.Viewer}}
+            <div class="action-btn">
+              {{template "follow_button" (dict "Username" $p.Username "Following" $c.Following "CSRF" $c.CSRF)}}
+            </div>
+          {{end}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12 col-md-10 offset-md-1">
+        <div class="articles-toggle">
+          <ul class="nav nav-pills outline-active">
+            <li class="nav-item">
+              <a class="nav-link{{if not $c.FavoritesTab}} active{{end}}" href="/users/{{$p.Username}}">My Articles</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{{if $c.FavoritesTab}} active{{end}}" href="/users/{{$p.Username}}/favorites">Favorited Articles</a>
+            </li>
+          </ul>
+        </div>
+        {{range $c.Articles}}
+          {{template "article_preview" .}}
+        {{else}}
+          <div class="article-preview empty-feed-message">No articles are here... yet.</div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}
