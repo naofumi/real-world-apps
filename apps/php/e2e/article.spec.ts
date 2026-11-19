@@ -10,13 +10,13 @@ test("article page shows body and author chrome", async ({ page }) => {
 test("author can edit; other user sees follow instead", async ({ page }) => {
   await login(page, "alice@example.com", "password");
   await page.goto("/article.php?slug=a-vanilla-php-stack");
-  await expect(page.getByRole("link", { name: "Edit Article" })).toBeVisible();
+  await expect(page.locator(".banner").getByRole("link", { name: "Edit Article" })).toBeVisible();
 
   await page.getByRole("button", { name: "Sign out" }).click();
   await login(page, "bob@example.com", "password");
   await page.goto("/article.php?slug=a-vanilla-php-stack");
   await expect(page.getByRole("link", { name: "Edit Article" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /Unfollow alice|Follow alice/ })).toBeVisible();
+  await expect(page.locator(".banner").getByRole("button", { name: /Unfollow alice|Follow alice/ })).toBeVisible();
 });
 
 test("create publishes a new article", async ({ page }) => {

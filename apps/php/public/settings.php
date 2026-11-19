@@ -64,26 +64,42 @@ $alert = $session->pullFlash('alert');
 $title = 'Settings — Conduit';
 require dirname(__DIR__) . '/includes/header.php';
 ?>
-<main class="auth-page wide">
-    <h1>Your Settings</h1>
+<div class="settings-page">
+    <div class="container page">
+        <div class="row">
+            <div class="col-md-6 offset-md-3 col-xs-12">
+                <h1 class="text-xs-center">Your Settings</h1>
 
-    <?php if ($error !== null): ?>
-        <div class="error"><?= e($error) ?></div>
-    <?php endif; ?>
+                <?php if ($error !== null): ?>
+                    <ul class="error-messages"><li><?= e($error) ?></li></ul>
+                <?php endif; ?>
 
-    <form method="post" action="/settings.php">
-        <input type="hidden" name="_csrf" value="<?= e($csrfToken) ?>">
-        <label for="image">URL of profile picture</label>
-        <input id="image" type="url" name="image" value="<?= e($form['image']) ?>">
-        <label for="username">Username</label>
-        <input id="username" type="text" name="username" value="<?= e($form['username']) ?>" required>
-        <label for="bio">Short bio about you</label>
-        <textarea id="bio" name="bio" rows="6"><?= e($form['bio']) ?></textarea>
-        <label for="email">Email</label>
-        <input id="email" type="email" name="email" value="<?= e($form['email']) ?>" required>
-        <label for="password">New password</label>
-        <input id="password" type="password" name="password" minlength="8" autocomplete="new-password" placeholder="Leave blank to keep current">
-        <button class="button" type="submit">Update Settings</button>
-    </form>
-</main>
+                <form method="post" action="/settings.php">
+                    <input type="hidden" name="_csrf" value="<?= e($csrfToken) ?>">
+                    <fieldset class="form-group">
+                        <label for="image">URL of profile picture</label>
+                        <input id="image" class="form-control" type="url" name="image" value="<?= e($form['image']) ?>" placeholder="URL of profile picture">
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <label for="username">Username</label>
+                        <input id="username" class="form-control form-control-lg" type="text" name="username" value="<?= e($form['username']) ?>" required placeholder="Username">
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <label for="bio">Short bio about you</label>
+                        <textarea id="bio" class="form-control form-control-lg" name="bio" rows="8" placeholder="Short bio about you"><?= e($form['bio']) ?></textarea>
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <label for="email">Email</label>
+                        <input id="email" class="form-control form-control-lg" type="email" name="email" value="<?= e($form['email']) ?>" required placeholder="Email">
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <label for="password">New password</label>
+                        <input id="password" class="form-control form-control-lg" type="password" name="password" minlength="8" autocomplete="new-password" placeholder="New password">
+                    </fieldset>
+                    <button class="btn btn-lg btn-primary pull-xs-right" type="submit">Update Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <?php require dirname(__DIR__) . '/includes/footer.php'; ?>

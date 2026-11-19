@@ -21,7 +21,7 @@ Same Conduit (RealWorld) product surface in three stacks under `apps/`. Numbers 
 | Application | ~1,082 | ~3,028 (~2.8× Rails) | ~1,733 (~1.6× Rails) |
 | Tests | ~592 | ~1,105 | ~314 |
 | App + tests | ~1,674 | ~4,133 | ~2,047 |
-| Vendored Conduit CSS | 1,205 | 1,205 | — (custom `app.css` ~313) |
+| Vendored Conduit CSS | 1,205 | 1,205 | 1,205 |
 
 Method notes:
 
@@ -163,7 +163,7 @@ Test LoC is highest on Hono largely because of a large API contract/query suite 
 ## Notable asymmetries
 
 - Password reset exists only in Rails.
-- Rails + Hono vendor the same Conduit Minimal CSS (~1,205 code lines). PHP ships a smaller custom `public/css/app.css`.
+- Rails, Hono, and PHP vendor the same Conduit Minimal CSS (~1,205 code lines). PHP keeps a thin `public/css/app.css` glue layer (flash + inline forms), matching Rails `application.css`.
 - Favorite UX: Turbo Stream partial (Rails) vs client mutation (Hono) vs full redirect (PHP).
 - Comment delete: Rails Ability = comment author; PHP also lets the article author delete comments on their article.
 - Hono implements the published RealWorld HTTP API; Rails and PHP optimize for HTML page scripts/controllers instead.

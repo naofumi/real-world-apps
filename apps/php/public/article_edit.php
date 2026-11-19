@@ -62,21 +62,37 @@ $alert = $session->pullFlash('alert');
 $title = 'Edit Article — Conduit';
 require dirname(__DIR__) . '/includes/header.php';
 ?>
-<main class="container form-page">
-    <h1>Edit Article</h1>
-    <?php if ($error !== null): ?><div class="error"><?= e($error) ?></div><?php endif; ?>
-    <form method="post" action="/article_edit.php?slug=<?= rawurlencode((string) $article['slug']) ?>">
-        <input type="hidden" name="_csrf" value="<?= e($csrfToken) ?>">
-        <input type="hidden" name="slug" value="<?= e((string) $article['slug']) ?>">
-        <label for="title">Article Title</label>
-        <input id="title" name="title" value="<?= e($form['title']) ?>" required>
-        <label for="description">What's this article about?</label>
-        <input id="description" name="description" value="<?= e($form['description']) ?>" required>
-        <label for="body">Write your article (Markdown)</label>
-        <textarea id="body" name="body" rows="12" required><?= e($form['body']) ?></textarea>
-        <label for="tag_list">Tags (comma or space separated)</label>
-        <input id="tag_list" name="tag_list" value="<?= e($form['tag_list']) ?>">
-        <button class="button" type="submit">Update Article</button>
-    </form>
-</main>
+<div class="editor-page">
+    <div class="container page">
+        <div class="row">
+            <div class="col-md-10 offset-md-1 col-xs-12">
+                <h1>Edit Article</h1>
+                <?php if ($error !== null): ?>
+                    <ul class="error-messages"><li><?= e($error) ?></li></ul>
+                <?php endif; ?>
+                <form method="post" action="/article_edit.php?slug=<?= rawurlencode((string) $article['slug']) ?>">
+                    <input type="hidden" name="_csrf" value="<?= e($csrfToken) ?>">
+                    <input type="hidden" name="slug" value="<?= e((string) $article['slug']) ?>">
+                    <fieldset class="form-group">
+                        <label for="title">Article Title</label>
+                        <input id="title" class="form-control form-control-lg" name="title" value="<?= e($form['title']) ?>" required placeholder="Article Title">
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <label for="description">What's this article about?</label>
+                        <input id="description" class="form-control" name="description" value="<?= e($form['description']) ?>" required placeholder="What's this article about?">
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <label for="body">Write your article (Markdown)</label>
+                        <textarea id="body" class="form-control" name="body" rows="8" required placeholder="Write your article (in markdown)"><?= e($form['body']) ?></textarea>
+                    </fieldset>
+                    <fieldset class="form-group">
+                        <label for="tag_list">Tags</label>
+                        <input id="tag_list" class="form-control" name="tag_list" value="<?= e($form['tag_list']) ?>" placeholder="Enter tags">
+                    </fieldset>
+                    <button class="btn btn-lg btn-primary pull-xs-right" type="submit">Update Article</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <?php require dirname(__DIR__) . '/includes/footer.php'; ?>
