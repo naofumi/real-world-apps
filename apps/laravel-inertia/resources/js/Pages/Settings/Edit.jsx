@@ -9,7 +9,6 @@ export default function Edit({ user }) {
         bio: user.bio || '',
         email: user.email || '',
         password: '',
-        password_confirmation: '',
     });
 
     const submit = (e) => {
@@ -73,19 +72,9 @@ export default function Edit({ user }) {
                                             className="form-control form-control-lg"
                                             type="password"
                                             placeholder="New Password"
+                                            autoComplete="new-password"
                                             value={data.password}
                                             onChange={(e) => setData('password', e.target.value)}
-                                        />
-                                    </fieldset>
-                                    <fieldset className="form-group">
-                                        <input
-                                            className="form-control form-control-lg"
-                                            type="password"
-                                            placeholder="Confirm New Password"
-                                            value={data.password_confirmation}
-                                            onChange={(e) =>
-                                                setData('password_confirmation', e.target.value)
-                                            }
                                         />
                                     </fieldset>
                                     <button

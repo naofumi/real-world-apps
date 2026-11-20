@@ -30,7 +30,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
-    Route::post('/settings/logout', [SettingsController::class, 'destroy'])->name('settings.logout');
 
     Route::post('/users/{user}/follow', [FollowController::class, 'store'])->name('follows.store');
     Route::delete('/users/{user}/follow', [FollowController::class, 'destroy'])->name('follows.destroy');

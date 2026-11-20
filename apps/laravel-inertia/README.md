@@ -1,8 +1,8 @@
 # RealWorld — Laravel + Inertia
 
-A [RealWorld](https://realworld-docs.netlify.app/) (Conduit) blogging app built with **Laravel**, **Inertia**, and **React**. Cookie sessions + CSRF (Laravel defaults), Eloquent models, and **Policies** for authorization. Product chrome uses **Conduit Minimal CSS** (same look as the sibling apps), not Breeze’s Tailwind UI.
+A [RealWorld](https://realworld-docs.netlify.app/) (Conduit) blogging app built with **Laravel**, **Inertia**, and **React**. Cookie sessions + CSRF (Laravel defaults), Eloquent models, and **Policies** for authorization. Product chrome uses **Conduit Minimal CSS** (same look as the sibling apps).
 
-Part of the [`real-world-apps`](../../) monorepo. Companions: [`../rails-erb`](../rails-erb), [`../react-hono`](../react-hono), [`../php`](../php).
+Part of the [`real-world-apps`](../../) monorepo. Companions: [`../rails-erb`](../rails-erb), [`../react-hono`](../react-hono), [`../php`](../php), [`../go-htmx`](../go-htmx).
 
 Run all commands from this directory (`apps/laravel-inertia`).
 
@@ -12,10 +12,10 @@ Run all commands from this directory (`apps/laravel-inertia`).
 | --- | --- |
 | PHP | 8.3+ |
 | Laravel | 13.x |
-| Front end | Inertia + React (Breeze scaffolding), Vite |
+| Front end | Inertia + React, Vite |
 | CSS | Conduit Minimal (local `resources/css/conduit.css`) |
 | DB | SQLite (`database/database.sqlite`) |
-| Auth | Cookie session + CSRF; Breeze password reset |
+| Auth | Cookie session + CSRF; register / login / logout (Hono-parity; no password reset or email verification) |
 | Authz | Laravel Policies (`ArticlePolicy`, `CommentPolicy`, `UserPolicy`) |
 | Markdown | `league/commonmark` (article bodies) |
 
@@ -67,8 +67,8 @@ npm run test:e2e
 - Global feed, tag filter, and following feed
 - Articles (CRUD, slugs, Markdown body, pagination)
 - Comments, favorites, follows
-- Registration, login/logout, settings, password reset
+- Registration, login/logout, settings (optional password change)
 - Profiles (authored articles + favorited articles)
 - Policies for article/comment/settings ownership
 
-Routes live in `routes/web.php` (+ Breeze `routes/auth.php`). Controllers under `app/Http/Controllers/`; Inertia pages under `resources/js/Pages/`.
+Routes live in `routes/web.php` (+ lean `routes/auth.php`). Controllers under `app/Http/Controllers/`; Inertia pages under `resources/js/Pages/`.

@@ -7,7 +7,6 @@ export default function Register() {
         username: '',
         email: '',
         password: '',
-        password_confirmation: '',
     });
 
     const submit = (e) => {
@@ -32,7 +31,9 @@ export default function Register() {
                                     <input
                                         className="form-control form-control-lg"
                                         type="text"
+                                        name="username"
                                         placeholder="Username"
+                                        autoComplete="username"
                                         value={data.username}
                                         onChange={(e) => setData('username', e.target.value)}
                                     />
@@ -41,7 +42,9 @@ export default function Register() {
                                     <input
                                         className="form-control form-control-lg"
                                         type="email"
+                                        name="email"
                                         placeholder="Email"
+                                        autoComplete="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
                                     />
@@ -50,20 +53,11 @@ export default function Register() {
                                     <input
                                         className="form-control form-control-lg"
                                         type="password"
+                                        name="password"
                                         placeholder="Password"
+                                        autoComplete="new-password"
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
-                                    />
-                                </fieldset>
-                                <fieldset className="form-group">
-                                    <input
-                                        className="form-control form-control-lg"
-                                        type="password"
-                                        placeholder="Confirm Password"
-                                        value={data.password_confirmation}
-                                        onChange={(e) =>
-                                            setData('password_confirmation', e.target.value)
-                                        }
                                     />
                                 </fieldset>
                                 <button
