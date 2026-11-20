@@ -10,7 +10,7 @@ Comparison monorepo for [RealWorld](https://realworld-docs.netlify.app/) (Condui
 | Laravel + Inertia | [`apps/laravel-inertia`](./apps/laravel-inertia) | Laravel, Inertia + React, Policies, SQLite |
 | Go + HTMX | [`apps/go-htmx`](./apps/go-htmx) | chi, html/template, HTMX, sqlc + SQLite |
 
-Cross-stack comparison writeups live in [`docs/`](./docs). Three-way LoC and architecture note: [`docs/comparisons/rails-hono-php.md`](./docs/comparisons/rails-hono-php.md).
+Cross-stack comparison writeups live in [`docs/`](./docs). Five-stack LoC and architecture: [`docs/comparisons/conduit-stacks.md`](./docs/comparisons/conduit-stacks.md).
 
 Each app is self-contained. **Run commands from that app’s directory** (see its README for setup, ports, and tests).
 

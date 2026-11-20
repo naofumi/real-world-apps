@@ -1,6 +1,8 @@
 # Rails ERB / React+Hono / PHP — three-way comparison
 
-Same Conduit (RealWorld) product surface in three stacks under `apps/`. Numbers are fresh `cloc` on this monorepo (git-tracked sources). Exclusions match prior Rails-vs-Hono notes: no `node_modules`, lockfiles, or generated Drizzle migration snapshots; vendored Conduit Minimal CSS is listed separately, not in “application.”
+> **Superseded for cross-stack ordering:** the five-app writeup ([`conduit-stacks.md`](./conduit-stacks.md)) covers Rails, Laravel + Inertia, PHP, Go + HTMX, and React + Hono with fresh `cloc` on current `main`. Keep this page for the deeper Rails / Hono / PHP tables (page character counts, Hono≈2× PHP server drivers). Some PHP UI totals here may lag `conduit-stacks.md` after Conduit CSS landing.
+
+Same Conduit (RealWorld) product surface in three stacks under `apps/`. Numbers are `cloc` on git-tracked sources. Exclusions match prior Rails-vs-Hono notes: no `node_modules`, lockfiles, or generated Drizzle migration snapshots; vendored Conduit Minimal CSS is listed separately, not in “application.”
 
 | App | Path |
 | --- | --- |

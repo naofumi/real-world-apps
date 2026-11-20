@@ -18,12 +18,15 @@ The apps implement the Conduit blogging surface (feeds, articles, comments, favo
 | --- | --- | --- | --- | --- | --- |
 | UI | Server-rendered ERB + Hotwire | React SPA | PHP page scripts + includes | Inertia + React pages | html/template + HTMX |
 | API | Controllers (HTML / Turbo) | Hono JSON (`/api/...`, JWT) | Form POSTs to `.php` files | Controllers → Inertia props | Form POSTs to resourceful routes |
-| Auth | Cookie sessions | JWT bearer | Cookie sessions + CSRF | Cookie sessions + CSRF | Cookie sessions + CSRF |
+| Auth | Cookie sessions (+ password reset) | JWT bearer | Cookie sessions + CSRF | Cookie sessions + CSRF (lean) | Cookie sessions + CSRF |
 | Authz | CanCanCan | Server `permissions` JSON | Session checks in pages | Laravel Policies | Inline checks in handlers |
 | DB | Active Record + SQLite | Drizzle + SQLite | PDO repositories + SQLite | Eloquent + SQLite | sqlc + SQLite |
-| CSS | Conduit Minimal | Conduit Minimal | custom `app.css` | Conduit Minimal | Conduit Minimal |
+| CSS | Conduit Minimal | Conduit Minimal | Conduit Minimal + glue | Conduit Minimal | Conduit Minimal |
 
-Longer writeup with fresh LoC and page-size tables: [`comparisons/rails-hono-php.md`](./comparisons/rails-hono-php.md). Qualitative testing-layer comparison (no LoC): [`comparisons/testing-strategies.md`](./comparisons/testing-strategies.md). Index: [`comparisons/README.md`](./comparisons/README.md).
+Primary LoC / architecture writeup (all five): [`comparisons/conduit-stacks.md`](./comparisons/conduit-stacks.md).  
+Older three-way deep dive: [`comparisons/rails-hono-php.md`](./comparisons/rails-hono-php.md).  
+Testing layers (qualitative): [`comparisons/testing-strategies.md`](./comparisons/testing-strategies.md).  
+Index: [`comparisons/README.md`](./comparisons/README.md).
 
 ## CI note
 
@@ -31,6 +34,5 @@ Each app still carries its own tooling under its directory. Nested workflows suc
 
 ## Planned
 
-- Topic slices split out of the three-way note (authz-only, “illegal states”)
+- Topic slices (authz-only, “illegal states”)
 - Path-filtered CI per app at the monorepo root
-- Five-stack LoC comparison (Go + Laravel) — see open comparison PR if present
