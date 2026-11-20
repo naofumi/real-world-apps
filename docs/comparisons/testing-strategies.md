@@ -1,14 +1,15 @@
-# Testing strategies — Rails ERB / React+Hono / PHP / Go+HTMX
+# Testing strategies — five Conduit stacks
 
 Qualitative comparison of how the RealWorld (Conduit) apps under `apps/` choose test layers. Based on each app’s stated strategy (`AGENTS.md`, README test sections, `.cursor/rules`, architecture/features docs, CI) and spot-checks of representative suites — not on test size or LoC.
 
-For architecture and measured LoC (Rails / Hono / PHP only so far), see [`rails-hono-php.md`](./rails-hono-php.md).
+For architecture and measured LoC across all five, see [`conduit-stacks.md`](./conduit-stacks.md). Rails / Hono / PHP deep dive: [`rails-hono-php.md`](./rails-hono-php.md).
 
 | App | Path |
 | --- | --- |
 | Rails ERB | [`apps/rails-erb`](../../apps/rails-erb) |
 | React + Hono | [`apps/react-hono`](../../apps/react-hono) |
 | PHP page scripts | [`apps/php`](../../apps/php) |
+| Laravel + Inertia | [`apps/laravel-inertia`](../../apps/laravel-inertia) |
 | Go + HTMX | [`apps/go-htmx`](../../apps/go-htmx) |
 
 ---
@@ -88,6 +89,29 @@ Classic page scripts have no router/controller framework seam. Repositories (pla
 
 ---
 
+## Laravel + Inertia (`apps/laravel-inertia`)
+
+**Layers**
+
+1. **Feature / HTTP** — PHPUnit under `tests/Feature/` (including `Auth/`). Hits controllers through the HTTP kernel with Inertia assertions (`assertInertia`) for props and shared auth state. Covers articles/social flows and lean register/login.
+2. **Browser E2E** — Playwright (`e2e/*.spec.ts`) against `artisan serve` + seeded SQLite. Auth, feed, and article journeys on the real Inertia React pages.
+
+**What they deliberately do not unit-test**
+
+Full React page trees under jsdom with mocked Inertia. Pages are thin relative to a JWT SPA; Feature tests own prop contracts, Playwright owns browser wiring (same spirit as Hono’s “e2e over page mocks,” with a richer middle HTTP layer because Laravel provides one).
+
+**Auth / DB / fixtures**
+
+- **Auth:** Cookie session + CSRF. Feature tests use Laravel’s acting-as / HTTP session helpers; E2E logs in through the real forms.
+- **DB:** RefreshDatabase (or migrate) on SQLite for Feature tests; E2E uses a dedicated seeded DB per Playwright config.
+- **CI:** `php artisan test` and `npm run test:e2e` per README; no nested monorepo workflow yet.
+
+**Why it fits**
+
+Inertia keeps a real server HTML/JSON-prop seam, so Feature tests are high leverage (closer to Rails controller tests than to Hono’s pure JSON contract). The React pages still need Playwright for client navigation and form posts.
+
+---
+
 ## Go + HTMX (`apps/go-htmx`)
 
 **Layers**
@@ -124,20 +148,21 @@ SSR + HTMX is closer to Rails/PHP than to the Hono SPA. sqlc is the cheap data s
 
 **Real differences**
 
-| Dimension | Rails | Hono | PHP | Go + HTMX |
-| --- | --- | --- | --- | --- |
-| Middle request layer | Rich controller integration + HTML assertions | In-process API contract (JSON), not HTML | None by design | Light `httptest` (auth/CSRF), not full HTML matrix |
-| Authorization tests | `Ability` unit + controller redirects | Pure `permissions` helpers + contract JSON shapes | Inline in page scripts; exercised via E2E | Inline in handlers; E2E + occasional httptest |
-| Client / UI isolation | ERB checked via integration/`assert_select` | Vitest only for thin seams | No page-script unit tests | No template unit tests |
-| Browser tool | Capybara / Selenium (Rails system) | Playwright | Playwright | Playwright |
-| Auth under test | Signed session cookie (+ form in system) | JWT bearer / SPA login | Session cookie + CSRF forms | Session cookie + CSRF forms |
-| Documented CI posture | GH Actions: `test` + `test:system` | README scripts | README scripts | README scripts |
+| Dimension | Rails | Hono | PHP | Laravel + Inertia | Go + HTMX |
+| --- | --- | --- | --- | --- | --- |
+| Middle request layer | Rich controller integration + HTML assertions | In-process API contract (JSON), not HTML | None by design | Feature tests + Inertia prop assertions | Light `httptest` (auth/CSRF), not full HTML matrix |
+| Authorization tests | `Ability` unit + controller redirects | Pure `permissions` helpers + contract JSON shapes | Inline in page scripts; exercised via E2E | Policies via Feature HTTP | Inline in handlers; E2E + occasional httptest |
+| Client / UI isolation | ERB checked via integration/`assert_select` | Vitest only for thin seams | No page-script unit tests | No page-level Vitest; Playwright for React | No template unit tests |
+| Browser tool | Capybara / Selenium (Rails system) | Playwright | Playwright | Playwright | Playwright |
+| Auth under test | Signed session cookie (+ form in system) | JWT bearer / SPA login | Session cookie + CSRF forms | Session cookie + CSRF forms | Session cookie + CSRF forms |
+| Documented CI posture | GH Actions: `test` + `test:system` | README scripts | README scripts | README scripts | README scripts |
 
 **How the product architecture drives the matrix**
 
 - **SSR forms (Rails)** → controller integration is high leverage; system tests fill Turbo/mail gaps.
 - **SPA + RealWorld API (Hono)** → contract + query tests own the server; Playwright owns pages; Vitest stays small.
 - **Page scripts (PHP)** → repository PHPUnit + Playwright only; avoiding a homemade controller-test harness is an explicit style choice.
+- **Inertia (Laravel)** → Feature tests own props/authz; Playwright owns React page wiring.
 - **Go + HTMX** → sqlc + thin httptest + Playwright; HTMX swaps covered in the browser like Turbo.
 
 Test *volume* across stacks is not a quality score: the suites optimize for different seams and are not aligned to the same bar. Compare strategies by which layer answers which failure mode (wrong SQL, wrong HTTP contract, wrong form/CSRF/redirect, wrong SPA wiring), not by how large the trees are.
