@@ -47,7 +47,7 @@ Path buckets: code that mainly talks to the DB / enforces request rules on the s
 
 - Rails stays the smallest overall; Active Record keeps the server row thin.
 - Go’s **UI row is the smallest** (~493 templates): handlers live in `internal/httpx` (server row). That is the inverse of PHP, where page scripts fold request logic into the UI row.
-- Laravel sits between Go and Hono on totals: Eloquent + Policies on the server, Inertia React pages on the UI (closer to Hono’s SPA cost than to ERB).
+- Laravel sits between Go and Hono on totals: Eloquent + Policies on the server, Inertia React pages on the UI (closer to Hono’s SPA cost than to ERB). Its server row is still ~2.5× Rails for reasons other than the ORM — see [Why Laravel’s server row is ~2.5× Rails](#why-laravels-server-row-is-25-rails).
 - Hono remains largest: JSON API + SPA client lifecycle.
 
 **What you should not read**
@@ -55,6 +55,7 @@ Path buckets: code that mainly talks to the DB / enforces request rules on the s
 - Do **not** treat PHP’s two rows as “backend vs frontend” the way Rails/Hono/Go/Laravel are. Each `public/*.php` owns auth/CSRF/redirects **and** HTML.
 - Do **not** treat Go’s large server row as “more domain complexity than Hono.” Go counts HTML handlers + hand SQL in one bucket; Hono’s HTML is mostly in the SPA (UI row) and its JSON adapters inflate the server row for a different reason.
 - Do **not** treat Laravel’s UI row as pure product Conduit screens — unused Breeze components still contribute ~333 lines.
+- Do **not** treat Laravel’s larger server row vs Rails as “Eloquent vs Active Record.” Both ORMs keep list/filter SQL out of application code; the gap is Breeze auth, Inertia prop shaping, and denser PHP models.
 
 ## Architecture
 
@@ -93,6 +94,26 @@ Favorite mutation shape:
 ORM vs hand SQL still explains most of the **Rails vs PHP/Go/Hono** server gap. Laravel and Rails share the Eloquent/AR side of that split; Go and PHP/Hono share hand-SQL cost (Go via sqlc sources).
 
 Hono’s server row remains ~2× PHP’s mainly because of the **RealWorld JSON API + contracts + wiring**, not because article SQL is twice as large — see [`rails-hono-php.md`](./rails-hono-php.md#why-honos-server-row-is-2-phps) (still accurate).
+
+### Why Laravel’s server row is ~2.5× Rails
+
+Server buckets: Rails ~475 vs Laravel ~1,185 (**~+710**). Both use a full ORM. The delta is **not** “Eloquent needs more SQL than Active Record.”
+
+| Driver | Approx. share of +710 | What it is |
+| --- | ---: | --- |
+| Breeze auth scaffolding | ~220–250 | Nine Auth controllers + `LoginRequest` + fat `routes/auth.php` (email verification, confirm-password, password update). Rails login/register/reset is thinner (~122) and omits verify/confirm controller surface. |
+| Inertia prop-shaping | ~250–300 | Controllers build JSON props; models carry `toFeedInertia` / `toInertia`. Rails assigns `@ivars` and lets ERB read associations — no DTO layer. |
+| Denser Eloquent models | ~80–100 | Same domain (slug, tags, scopes): `Article.php` ~142 vs `article.rb` ~53 — typed relation methods, `$fillable`/`$casts`, callbacks, plus serializers. |
+| Policies + Support + routes | ~100–130 | Three Policy classes vs one CanCanCan `Ability`; `Support\Pagination` + `Markdown`; routes ~81 vs ~17 (`auth.php` alone ~43). |
+
+Concrete controller examples of the Inertia tax:
+
+| File | Rails | Laravel |
+| --- | ---: | ---: |
+| Article controller | ~54 | ~118 |
+| Settings controller | ~17 | ~62 |
+
+**Do not read** this gap as ORM inefficiency. List/filter SQL stays out of hand-written code on both sides. Stripping unused Breeze verify/confirm would shrink Laravel’s server row but would not close it — prop shaping and denser models remain.
 
 ## Frontend / page size
 
@@ -142,7 +163,7 @@ Qualitative detail: [`testing-strategies.md`](./testing-strategies.md).
 ## Takeaways (factual)
 
 1. **Application size order (small → large):** Rails (~1.1k) → PHP (~1.7k) → Go (~2.3k) → Laravel (~2.9k) → Hono (~3.0k).
-2. **ORM vs hand SQL:** Rails/Laravel keep article/list SQL out of application code; PHP/Go/Hono pay for it (Go via sqlc sources; generated Go excluded from Application).
+2. **ORM vs hand SQL:** Rails/Laravel keep article/list SQL out of application code; PHP/Go/Hono pay for it (Go via sqlc sources; generated Go excluded from Application). Laravel’s remaining gap vs Rails is Breeze auth + Inertia DTOs + denser models — see [above](#why-laravels-server-row-is-25-rails).
 3. **UI shape:** Go templates are the thinnest UI row. Rails ERB next. PHP pages are thicker because they inline the request story. Laravel Inertia and Hono SPA are the heavy React UIs.
 4. **Auth:** cookie + CSRF on Rails, PHP, Go, Laravel; JWT on Hono. Password reset only on Rails and Laravel.
 5. **Tests:** all five lean on browser/system or Playwright for flows; none make full page/UI scripts the primary unit-test target.
