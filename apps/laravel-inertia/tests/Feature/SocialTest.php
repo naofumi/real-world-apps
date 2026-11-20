@@ -79,7 +79,6 @@ class SocialTest extends TestCase
                 'bio' => 'Updated bio',
                 'image' => 'https://example.com/avatar.png',
                 'password' => '',
-                'password_confirmation' => '',
             ])
             ->assertRedirect('/settings');
 

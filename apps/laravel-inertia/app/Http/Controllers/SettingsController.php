@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
@@ -12,12 +11,10 @@ use Inertia\Response;
 
 class SettingsController extends Controller
 {
-    public function edit(): Response
+    public function edit(Request $request): Response
     {
-        $user = Auth::user();
-
         return Inertia::render('Settings/Edit', [
-            'user' => $user->toInertia(),
+            'user' => $request->user()->toInertia(),
         ]);
     }
 
@@ -44,7 +41,7 @@ class SettingsController extends Controller
             ],
             'bio' => ['nullable', 'string'],
             'image' => ['nullable', 'string', 'url', 'max:255'],
-            'password' => ['nullable', 'confirmed', Password::defaults()],
+            'password' => ['nullable', 'string', Password::defaults()],
         ]);
 
         $user->fill([
@@ -61,14 +58,5 @@ class SettingsController extends Controller
         $user->save();
 
         return redirect()->route('settings.edit')->with('success', 'Settings updated.');
-    }
-
-    public function destroy(Request $request): RedirectResponse
-    {
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('home');
     }
 }
