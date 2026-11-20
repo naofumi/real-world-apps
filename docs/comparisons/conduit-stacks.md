@@ -51,7 +51,7 @@ If sqlc generated code is folded into Go, Go becomes the largest (~3,396) — th
 **What you can read**
 
 - **SSR HTML** (Rails, Go templates, PHP pages) keeps UI rows smaller than the **SPA** (Hono) except where PHP folds request logic into page files.
-- **Laravel UI (~940) is below Hono (~1,536)** after dropping Breeze: live Conduit React pages + layout only; no dead Tailwind kit. Hono still carries SPA `lib/` (~299) and per-page fetch/mutate state.
+- **Laravel UI (~940) is below Hono (~1,536):** both use React, but Hono’s SPA still carries client `lib/` (~299) and per-page fetch/mutate state that Inertia pages largely avoid.
 - **Go templates (~493) are the smallest UI row** — markup + HTMX partials, no React. Go’s cost sits in the **server** row (handlers + hand SQL).
 - **Laravel server (~880) sits between PHP (~764) and Hono (~1,492)** — Eloquent like Rails, but larger than Rails (see below).
 
@@ -73,23 +73,23 @@ If sqlc generated code is folded into Go, Go becomes the largest (~3,396) — th
 
 Favorite UX: Rails Turbo Stream · Laravel Inertia visit · PHP redirect · Go HTMX partial · Hono client mutation.
 
-## Laravel vs Rails — server gap (post-Breeze)
+## Laravel vs Rails — server gap
 
 | | Rails | Laravel | Δ |
 | --- | ---: | ---: | ---: |
 | Server row | ~475 | ~880 | **~+405** |
 
-Earlier notes (~+710) included a large **Breeze** auth suite (verify / confirm / reset controllers + fat `auth.php`). That surface is gone: Laravel auth is Hono-parity lean (`SessionController`, `RegisterController`, `routes/auth.php` ≈ **78** code lines). Rails still carries password-reset (`PasswordsController` + mailer); Laravel does not.
+Laravel auth is lean and Hono-parity (`SessionController`, `RegisterController`, `routes/auth.php` ≈ **78** code lines). Rails still carries password-reset (`PasswordsController` + mailer); Laravel does not — so auth is not what inflates Laravel relative to Rails.
 
-**Remaining drivers (not “ORM can’t query”):**
+**Drivers (not “ORM can’t query”):**
 
-1. **Inertia prop-shaping (~half the remaining gap)** — Controllers build JSON-ish props (`Inertia::render` arrays, `canEdit` flags, comment maps, Markdown HTML). Example: `ArticleController` ~139 lines vs Rails `ArticlesController` ~67. Models add `toInertia` / `toFeedInertia` helpers Rails never needs because ERB reads associations.
-2. **Denser Eloquent models (~+170 on the models bucket)** — Same domain graph; PHP relation methods, `$fillable`/`$casts`, boot hooks vs compact Active Record DSL (`Article.php` ~cloc  vs `article.rb` ~53–66 lines of substance).
+1. **Inertia prop assembly (~half the gap vs Rails)** — Controllers build props (`Inertia::render` arrays, `canEdit` flags, comment maps, Markdown HTML). Example: `ArticleController` ~139 lines vs Rails `ArticlesController` ~67. Models add `toInertia` / `toFeedInertia` helpers Rails never needs because ERB reads associations. (Hono also serializes JSON for its API — see next section; the contrast here is with Rails ERB, which does not.)
+2. **Denser Eloquent models (~+170 on the models bucket)** — Same domain graph; PHP relation methods, `$fillable`/`$casts`, boot hooks vs compact Active Record DSL.
 3. **Policies + Support + routes** — Three policy classes vs one `Ability`; `Support\Pagination` + `Markdown`; slightly larger route files.
 
-**Do not conclude** that Eloquent requires more hand SQL than Active Record for feeds/favorites. **Do conclude** that Inertia moves presentation serialization into the server row (and still leaves a real React UI row).
+**Do not conclude** that Eloquent requires more hand SQL than Active Record for feeds/favorites. **Do conclude** that, versus Rails ERB, Inertia puts page-shaped serialization into the server row (and still leaves a real React UI row).
 
-## Laravel vs Hono — UI counting (post-Breeze)
+## Laravel vs Hono — UI (and shared JSON cost)
 
 | | Laravel UI | Hono UI |
 | --- | ---: | ---: |
@@ -101,14 +101,16 @@ Breakdown (approx.):
 | --- | ---: | ---: |
 | Product / auth pages | ~667 (`Pages/`) | pages under `features/` (majority of UI) |
 | Shared layout / components | ~236 | shell + shared bits |
-| SPA client lib / auth plumbing | — (props from Laravel) | ~299 (`lib/`) |
+| SPA client lib / auth plumbing | — | ~299 (`lib/`) |
 | Blade / entry shell | ~17 + `app.jsx` | `main.tsx` / `app.tsx` |
 
-**Read carefully:**
+**Both stacks serialize for the client.** Laravel builds Inertia prop arrays in controllers/models; Hono builds JSON responses in the API (`present()` / module services, `permissions`, contracts). That cost sits in each stack’s **server** row — it is not a Laravel-only tax.
 
-- Pre-Breeze-drop Laravel UI looked near Hono (~1.6k) because **~500+ lines of unused Breeze layouts/components** sat in `resources/js`. Those are gone; the near-tie was an artifact.
-- Live Laravel Conduit UI is **smaller** than Hono’s SPA UI. Laravel still pays some UI cost on the **server** (prop arrays); Hono pays fetch/cache/mutation lifecycle in the UI row instead.
-- Auth pages are parity-sized now (login/register only on both); no forgot/verify/confirm on Laravel.
+**What actually differs in the UI row:**
+
+- Laravel pages mostly **render props** and post through Inertia; they do not own a separate fetch/cache/mutation client layer.
+- Hono’s SPA owns **client lifecycle** (TanStack Query, auth/`lib/`, loading/error unions, cache invalidation) on top of consuming the JSON API — that is the bulk of why Hono UI (~1,536) exceeds Laravel UI (~940).
+- Auth page surface is similar (login/register on both).
 
 ## Server / data access (who writes SQL)
 
@@ -132,7 +134,7 @@ Qualitative testing-layer comparison (all five, including Laravel Feature + Play
 ## Takeaways
 
 1. **Size order (application, hand-written):** Rails → Laravel ≈ PHP → Go → Hono.
-2. **ORM stacks are not equal in LoC:** Rails stays smallest; Laravel’s extra server LoC after dropping Breeze is mostly **Inertia serialization + PHP/Eloquent ceremony**, not missing query power.
+2. **ORM stacks are not equal in LoC:** Rails stays smallest; Laravel’s extra server LoC vs Rails is mostly **Inertia page props + PHP/Eloquent ceremony**, not missing query power. Hono separately pays JSON serialization in its API server row.
 3. **Hand-SQL stacks** (PHP, Hono, Go) spend on persistence differently: PHP/Hono in repository/query modules; Go in sqlc SQL + fat handlers (generated Go excluded here).
-4. **UI:** Go/Rails SSR markup are compact; Laravel React UI &lt; Hono SPA UI once Breeze dead code is gone; PHP pages look larger because they mix controller logic into `public/*.php`.
+4. **UI:** Go/Rails SSR markup are compact; Laravel React UI &lt; Hono SPA UI mainly because of SPA client lifecycle (not because only Laravel serializes). PHP pages look larger because they mix controller logic into `public/*.php`.
 5. **Auth:** Cookie+CSRF everywhere except Hono (JWT). Password reset remains **Rails-only**.

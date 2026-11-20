@@ -6,7 +6,7 @@ Side-by-side notes across the five Conduit stacks under `apps/`.
 
 | Doc | What it covers |
 | --- | --- |
-| [`conduit-stacks.md`](./conduit-stacks.md) | **Primary** five-way LoC + architecture (Rails, Laravel, PHP, Go, Hono); Laravel vs Rails server gap and Laravel vs Hono UI after dropping Breeze |
+| [`conduit-stacks.md`](./conduit-stacks.md) | **Primary** five-way LoC + architecture (Rails, Laravel, PHP, Go, Hono); Laravel vs Rails server gap and Laravel vs Hono UI |
 | [`rails-hono-php.md`](./rails-hono-php.md) | Older three-way deep dive (page character tables, Hono≈2× PHP server drivers). Forward-pointer to the five-way doc |
 | [`testing-strategies.md`](./testing-strategies.md) | Qualitative testing strategies (layers, fixtures, CI posture — no LoC) |
 | [`images/conduit-stacks-loc.png`](./images/conduit-stacks-loc.png) | Five-stack LoC poster (regenerate via `images/generate_conduit_stacks_poster.py`) |

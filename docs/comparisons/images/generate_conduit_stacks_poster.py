@@ -49,8 +49,8 @@ SERVER_UI = [
     ("Hono", 1492, 1536, HONO),
 ]
 CALLOUTS = [
-    ("Laravel vs Rails server", "~880 vs ~475 (+405). Not ORM-vs-SQL — Inertia props + denser models. Breeze auth gone (was ~⅓ of old gap).", LARAVEL),
-    ("Laravel vs Hono UI", "~940 vs ~1,536. Live Conduit React only; no dead Breeze kit. Hono still pays SPA lib (~299) + fetch/mutate.", LARAVEL),
+    ("Laravel vs Rails server", "~880 vs ~475 (+405). Not ORM-vs-SQL — Inertia page props + denser models vs ERB (which does not serialize).", LARAVEL),
+    ("Laravel vs Hono UI", "~940 vs ~1,536. Both serialize (Inertia props / JSON API). UI gap is SPA lib (~299) + fetch/mutate, not serialization alone.", LARAVEL),
     ("Go counting", "Headline excludes sqlc generated (~1,060). Templates smallest UI (~493); cost is handlers + hand SQL.", GO),
 ]
 
