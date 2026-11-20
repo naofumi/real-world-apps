@@ -36,22 +36,22 @@ ACCENT = (55, 65, 81)
 APPS = [
     # name, app_loc, ratio, color, short
     ("Rails ERB", 1082, "1.0×", RAILS, "baseline"),
-    ("Laravel", 1820, "~1.7×", LARAVEL, "Inertia"),
-    ("PHP", 1891, "~1.7×", PHP, "page scripts"),
-    ("Go+HTMX", 2260, "~2.1×", GO, "hand (no sqlc gen)"),
-    ("React+Hono", 3028, "~2.8×", HONO, "SPA+API"),
+    ("Laravel Inertia", 1820, "~1.7×", LARAVEL, "props → React"),
+    ("Plain PHP", 1891, "~1.7×", PHP, "no framework"),
+    ("Go HTMX", 2260, "~2.1×", GO, "hand (no sqlc gen)"),
+    ("React Hono", 3028, "~2.8×", HONO, "SPA + JSON API"),
 ]
 SERVER_UI = [
-    ("Rails", 475, 587, RAILS),
-    ("Laravel", 880, 940, LARAVEL),
-    ("PHP", 764, 1127, PHP),
-    ("Go", 1767, 493, GO),
-    ("Hono", 1492, 1536, HONO),
+    ("Rails ERB", 475, 587, RAILS),
+    ("Laravel Inertia", 880, 940, LARAVEL),
+    ("Plain PHP", 764, 1127, PHP),
+    ("Go HTMX", 1767, 493, GO),
+    ("React Hono", 1492, 1536, HONO),
 ]
 CALLOUTS = [
-    ("Laravel vs Rails server", "~880 vs ~475 (+405). Not ORM-vs-SQL — Inertia page props + denser models vs ERB (which does not serialize).", LARAVEL),
-    ("Laravel vs Hono UI", "~940 vs ~1,536. Both serialize (Inertia props / JSON API). UI gap is SPA lib (~299) + fetch/mutate, not serialization alone.", LARAVEL),
-    ("Go counting", "Headline excludes sqlc generated (~1,060). Templates smallest UI (~493); cost is handlers + hand SQL.", GO),
+    ("Laravel Inertia vs Rails ERB", "~880 vs ~475 (+405). Not ORM-vs-SQL — Inertia page props + denser models vs ERB (which does not serialize).", LARAVEL),
+    ("Laravel Inertia vs React Hono", "~940 vs ~1,536 UI. Both serialize (props / JSON API). Gap is SPA lib (~299) + fetch/mutate.", LARAVEL),
+    ("Go HTMX counting", "Headline excludes sqlc generated (~1,060). Templates smallest UI (~493); cost is handlers + hand SQL.", GO),
 ]
 
 FONT_CANDIDATES = {
@@ -163,7 +163,7 @@ def main() -> None:
     f_title = font(FONT_BOLD, 38)
     f_sub = font(FONT_REG, 16)
     f_h2 = font(FONT_BOLD, 22)
-    f_h3 = font(FONT_SEMI, 15)
+    f_h3 = font(FONT_SEMI, 14)
     f_body = font(FONT_REG, 14)
     f_small = font(FONT_REG, 12)
     f_tiny = font(FONT_REG, 11)
@@ -208,7 +208,7 @@ def main() -> None:
 
     y += card_h + 18
     vmax = max(loc for _, loc, *_ in APPS)
-    bar_x = MARGIN + 120
+    bar_x = MARGIN + 140
     bar_w = W - MARGIN - bar_x - 100
     for name, loc, ratio, color, note in APPS:
         d.text((MARGIN, y + 1), name, font=f_label, fill=INK)
@@ -242,7 +242,7 @@ def main() -> None:
     y += 28
 
     total_max = max(s + u for _, s, u, _ in SERVER_UI)
-    label_w = 80
+    label_w = 130
     bar_h = 30
     for name, server, ui, color in SERVER_UI:
         d.text((MARGIN, y + 6), name, font=f_label, fill=INK)
@@ -289,17 +289,17 @@ def main() -> None:
     d.text((MARGIN, y), "4 · Architecture (one line each)", font=f_h2, fill=INK)
     y += 28
     rows = [
-        ("Rails", "Controller → ERB / Turbo · Active Record · cookie + reset", RAILS),
-        ("Laravel", "Controller → Inertia props → React · Eloquent · Policies · lean auth", LARAVEL),
-        ("PHP", "public/*.php page scripts · PDO repos · session + CSRF", PHP),
-        ("Go", "chi → template / HTMX · sqlc from hand SQL · session + CSRF", GO),
-        ("Hono", "JSON /api + JWT · Drizzle + hand queries · React SPA", HONO),
+        ("Rails ERB", "Controller → ERB / Turbo · Active Record · cookie + reset", RAILS),
+        ("Laravel Inertia", "Controller → Inertia props → React · Eloquent · Policies · lean auth", LARAVEL),
+        ("Plain PHP", "No framework · public/*.php page scripts · PDO repos · session + CSRF", PHP),
+        ("Go HTMX", "chi → template / HTMX · sqlc from hand SQL · session + CSRF", GO),
+        ("React Hono", "JSON /api + JWT · Drizzle + hand queries · React SPA", HONO),
     ]
     for name, blurb, color in rows:
         rounded_rect(d, (MARGIN, y, W - MARGIN, y + 36), 8, CARD, RULE, 1)
         d.rectangle((MARGIN, y, MARGIN + 6, y + 36), fill=color)
         d.text((MARGIN + 18, y + 9), name, font=f_label, fill=color)
-        d.text((MARGIN + 110, y + 10), blurb, font=f_small, fill=MUTED)
+        d.text((MARGIN + 150, y + 10), blurb, font=f_small, fill=MUTED)
         y += 44
 
     y += 8

@@ -25,12 +25,12 @@ Application totals (hand-written; no vendored CSS, no tests, no sqlc gen):
 | Stack | Application | Server | UI |
 | --- | ---: | ---: | ---: |
 | Rails ERB | 1,082 | 475 | 587 |
-| Laravel | 1,820 | 880 | 940 |
-| PHP | 1,891 | 764 | 1,127 |
-| Go + HTMX | 2,260 | 1,767 | 493 |
-| React + Hono | 3,028 | 1,492 | 1,536 |
+| Laravel Inertia | 1,820 | 880 | 940 |
+| Plain PHP (no framework) | 1,891 | 764 | 1,127 |
+| Go HTMX | 2,260 | 1,767 | 493 |
+| React Hono | 3,028 | 1,492 | 1,536 |
 
-Design: same slate paper / ink / muted tokens as the three-stack poster; stack accents teal (Rails), violet (Laravel), amber (PHP), cyan (Go), navy (Hono).
+Poster labels use architecture names (Rails ERB, Laravel Inertia, Plain PHP, Go HTMX, React Hono). Design: same slate paper / ink / muted tokens as the three-stack poster; accents teal / violet / amber / cyan / navy.
 
 ## Three-stack poster (legacy)
 
