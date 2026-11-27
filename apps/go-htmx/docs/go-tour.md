@@ -212,6 +212,16 @@ The middleware body is only three steps: call `s.withSession`, write an error re
 
 Contexts are also immutable. `auth.WithViewer(ctx, v)` wraps `ctx` in a new context that holds `v` and returns it. That is why the code keeps reassigning `ctx = auth.WithX(ctx, …)`.
 
+Neither `withSession` nor `WithContext` changes the original request. `withSession` starts from `r.Context()` and returns a new context; `r.WithContext(ctx)` returns a new request. The original `r` keeps its old context. Each `WithX` layer wraps the previous context like a linked list, so everything already there (cancellation, chi's route params) is preserved. For a logged-in request:
+
+```text
+r.Context()                       chi/server context
+  + viewer, session token, CSRF   added by withSession  →  ctx
+r2 := r.WithContext(ctx)          copy of r that carries ctx
+next.ServeHTTP(w, r2)             handlers get r2
+auth.ViewerFrom(r2.Context())     finds the viewer by walking the layers
+```
+
 [`RequireLogin`](../internal/httpx/middleware.go) redirects to `/login` if there is no viewer.
 
 [`RequireCSRF`](../internal/httpx/middleware.go) compares form `_csrf` (or header) to the token from context.
