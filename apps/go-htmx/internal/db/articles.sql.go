@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 const articleSlugExists = `-- name: ArticleSlugExists :one
@@ -24,46 +25,6 @@ func (q *Queries) ArticleSlugExists(ctx context.Context, arg ArticleSlugExistsPa
 	var column_1 int64
 	err := row.Scan(&column_1)
 	return column_1, err
-}
-
-const countFeedArticles = `-- name: CountFeedArticles :one
-SELECT COUNT(*)
-FROM articles a
-INNER JOIN follows f ON f.followed_id = a.user_id
-WHERE f.follower_id = ?
-`
-
-func (q *Queries) CountFeedArticles(ctx context.Context, followerID int64) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countFeedArticles, followerID)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const countGlobalArticles = `-- name: CountGlobalArticles :one
-SELECT COUNT(*) FROM articles
-`
-
-func (q *Queries) CountGlobalArticles(ctx context.Context) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countGlobalArticles)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const countGlobalArticlesByTag = `-- name: CountGlobalArticlesByTag :one
-SELECT COUNT(*)
-FROM articles a
-INNER JOIN article_tags at ON at.article_id = a.id
-INNER JOIN tags t ON t.id = at.tag_id
-WHERE t.name = ? COLLATE NOCASE
-`
-
-func (q *Queries) CountGlobalArticlesByTag(ctx context.Context, name string) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countGlobalArticlesByTag, name)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
 }
 
 const createArticle = `-- name: CreateArticle :one
@@ -182,39 +143,15 @@ func (q *Queries) GetArticleBySlug(ctx context.Context, slug string) (GetArticle
 	return i, err
 }
 
-const getArticlePreviewByID = `-- name: GetArticlePreviewByID :one
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-WHERE a.id = ?
+const getArticleSlugByID = `-- name: GetArticleSlugByID :one
+SELECT slug FROM articles WHERE id = ?
 `
 
-type GetArticlePreviewByIDRow struct {
-	ID             int64          `json:"id"`
-	Title          string         `json:"title"`
-	Description    string         `json:"description"`
-	Slug           string         `json:"slug"`
-	FavoritesCount int64          `json:"favorites_count"`
-	CreatedAt      string         `json:"created_at"`
-	AuthorUsername string         `json:"author_username"`
-	AuthorImage    sql.NullString `json:"author_image"`
-}
-
-func (q *Queries) GetArticlePreviewByID(ctx context.Context, id int64) (GetArticlePreviewByIDRow, error) {
-	row := q.db.QueryRowContext(ctx, getArticlePreviewByID, id)
-	var i GetArticlePreviewByIDRow
-	err := row.Scan(
-		&i.ID,
-		&i.Title,
-		&i.Description,
-		&i.Slug,
-		&i.FavoritesCount,
-		&i.CreatedAt,
-		&i.AuthorUsername,
-		&i.AuthorImage,
-	)
-	return i, err
+func (q *Queries) GetArticleSlugByID(ctx context.Context, id int64) (string, error) {
+	row := q.db.QueryRowContext(ctx, getArticleSlugByID, id)
+	var slug string
+	err := row.Scan(&slug)
+	return slug, err
 }
 
 const incrementFavoritesCount = `-- name: IncrementFavoritesCount :exec
@@ -263,12 +200,9 @@ func (q *Queries) IsFavorited(ctx context.Context, arg IsFavoritedParams) (int64
 }
 
 const listArticlesByAuthor = `-- name: ListArticlesByAuthor :many
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-WHERE a.user_id = ?
-ORDER BY a.created_at DESC, a.id DESC
+SELECT p.id, p.user_id, p.title, p.description, p.slug, p.favorites_count, p.created_at, p.author_username, p.author_image FROM article_previews p
+WHERE p.user_id = ?
+ORDER BY p.created_at DESC, p.id DESC
 LIMIT ? OFFSET ?
 `
 
@@ -278,28 +212,18 @@ type ListArticlesByAuthorParams struct {
 	Offset int64 `json:"offset"`
 }
 
-type ListArticlesByAuthorRow struct {
-	ID             int64          `json:"id"`
-	Title          string         `json:"title"`
-	Description    string         `json:"description"`
-	Slug           string         `json:"slug"`
-	FavoritesCount int64          `json:"favorites_count"`
-	CreatedAt      string         `json:"created_at"`
-	AuthorUsername string         `json:"author_username"`
-	AuthorImage    sql.NullString `json:"author_image"`
-}
-
-func (q *Queries) ListArticlesByAuthor(ctx context.Context, arg ListArticlesByAuthorParams) ([]ListArticlesByAuthorRow, error) {
+func (q *Queries) ListArticlesByAuthor(ctx context.Context, arg ListArticlesByAuthorParams) ([]ArticlePreview, error) {
 	rows, err := q.db.QueryContext(ctx, listArticlesByAuthor, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListArticlesByAuthorRow{}
+	items := []ArticlePreview{}
 	for rows.Next() {
-		var i ListArticlesByAuthorRow
+		var i ArticlePreview
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
 			&i.Title,
 			&i.Description,
 			&i.Slug,
@@ -322,13 +246,10 @@ func (q *Queries) ListArticlesByAuthor(ctx context.Context, arg ListArticlesByAu
 }
 
 const listArticlesFavoritedBy = `-- name: ListArticlesFavoritedBy :many
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-INNER JOIN favorites fav ON fav.article_id = a.id
+SELECT p.id, p.user_id, p.title, p.description, p.slug, p.favorites_count, p.created_at, p.author_username, p.author_image FROM article_previews p
+INNER JOIN favorites fav ON fav.article_id = p.id
 WHERE fav.user_id = ?
-ORDER BY fav.created_at DESC, a.id DESC
+ORDER BY fav.created_at DESC, p.id DESC
 LIMIT ? OFFSET ?
 `
 
@@ -338,28 +259,18 @@ type ListArticlesFavoritedByParams struct {
 	Offset int64 `json:"offset"`
 }
 
-type ListArticlesFavoritedByRow struct {
-	ID             int64          `json:"id"`
-	Title          string         `json:"title"`
-	Description    string         `json:"description"`
-	Slug           string         `json:"slug"`
-	FavoritesCount int64          `json:"favorites_count"`
-	CreatedAt      string         `json:"created_at"`
-	AuthorUsername string         `json:"author_username"`
-	AuthorImage    sql.NullString `json:"author_image"`
-}
-
-func (q *Queries) ListArticlesFavoritedBy(ctx context.Context, arg ListArticlesFavoritedByParams) ([]ListArticlesFavoritedByRow, error) {
+func (q *Queries) ListArticlesFavoritedBy(ctx context.Context, arg ListArticlesFavoritedByParams) ([]ArticlePreview, error) {
 	rows, err := q.db.QueryContext(ctx, listArticlesFavoritedBy, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListArticlesFavoritedByRow{}
+	items := []ArticlePreview{}
 	for rows.Next() {
-		var i ListArticlesFavoritedByRow
+		var i ArticlePreview
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
 			&i.Title,
 			&i.Description,
 			&i.Slug,
@@ -381,14 +292,55 @@ func (q *Queries) ListArticlesFavoritedBy(ctx context.Context, arg ListArticlesF
 	return items, nil
 }
 
+const listFavoritedArticleIDs = `-- name: ListFavoritedArticleIDs :many
+SELECT article_id FROM favorites
+WHERE user_id = ?1 AND article_id IN (/*SLICE:article_ids*/?)
+`
+
+type ListFavoritedArticleIDsParams struct {
+	UserID     int64   `json:"user_id"`
+	ArticleIds []int64 `json:"article_ids"`
+}
+
+func (q *Queries) ListFavoritedArticleIDs(ctx context.Context, arg ListFavoritedArticleIDsParams) ([]int64, error) {
+	query := listFavoritedArticleIDs
+	var queryParams []interface{}
+	queryParams = append(queryParams, arg.UserID)
+	if len(arg.ArticleIds) > 0 {
+		for _, v := range arg.ArticleIds {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:article_ids*/?", strings.Repeat(",?", len(arg.ArticleIds))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:article_ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var article_id int64
+		if err := rows.Scan(&article_id); err != nil {
+			return nil, err
+		}
+		items = append(items, article_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listFeedArticles = `-- name: ListFeedArticles :many
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-INNER JOIN follows f ON f.followed_id = a.user_id
+SELECT p.id, p.user_id, p.title, p.description, p.slug, p.favorites_count, p.created_at, p.author_username, p.author_image FROM article_previews p
+INNER JOIN follows f ON f.followed_id = p.user_id
 WHERE f.follower_id = ?
-ORDER BY a.created_at DESC, a.id DESC
+ORDER BY p.created_at DESC, p.id DESC
 LIMIT ? OFFSET ?
 `
 
@@ -398,28 +350,18 @@ type ListFeedArticlesParams struct {
 	Offset     int64 `json:"offset"`
 }
 
-type ListFeedArticlesRow struct {
-	ID             int64          `json:"id"`
-	Title          string         `json:"title"`
-	Description    string         `json:"description"`
-	Slug           string         `json:"slug"`
-	FavoritesCount int64          `json:"favorites_count"`
-	CreatedAt      string         `json:"created_at"`
-	AuthorUsername string         `json:"author_username"`
-	AuthorImage    sql.NullString `json:"author_image"`
-}
-
-func (q *Queries) ListFeedArticles(ctx context.Context, arg ListFeedArticlesParams) ([]ListFeedArticlesRow, error) {
+func (q *Queries) ListFeedArticles(ctx context.Context, arg ListFeedArticlesParams) ([]ArticlePreview, error) {
 	rows, err := q.db.QueryContext(ctx, listFeedArticles, arg.FollowerID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListFeedArticlesRow{}
+	items := []ArticlePreview{}
 	for rows.Next() {
-		var i ListFeedArticlesRow
+		var i ArticlePreview
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
 			&i.Title,
 			&i.Description,
 			&i.Slug,
@@ -442,11 +384,8 @@ func (q *Queries) ListFeedArticles(ctx context.Context, arg ListFeedArticlesPara
 }
 
 const listGlobalArticles = `-- name: ListGlobalArticles :many
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-ORDER BY a.created_at DESC, a.id DESC
+SELECT p.id, p.user_id, p.title, p.description, p.slug, p.favorites_count, p.created_at, p.author_username, p.author_image FROM article_previews p
+ORDER BY p.created_at DESC, p.id DESC
 LIMIT ? OFFSET ?
 `
 
@@ -455,28 +394,18 @@ type ListGlobalArticlesParams struct {
 	Offset int64 `json:"offset"`
 }
 
-type ListGlobalArticlesRow struct {
-	ID             int64          `json:"id"`
-	Title          string         `json:"title"`
-	Description    string         `json:"description"`
-	Slug           string         `json:"slug"`
-	FavoritesCount int64          `json:"favorites_count"`
-	CreatedAt      string         `json:"created_at"`
-	AuthorUsername string         `json:"author_username"`
-	AuthorImage    sql.NullString `json:"author_image"`
-}
-
-func (q *Queries) ListGlobalArticles(ctx context.Context, arg ListGlobalArticlesParams) ([]ListGlobalArticlesRow, error) {
+func (q *Queries) ListGlobalArticles(ctx context.Context, arg ListGlobalArticlesParams) ([]ArticlePreview, error) {
 	rows, err := q.db.QueryContext(ctx, listGlobalArticles, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListGlobalArticlesRow{}
+	items := []ArticlePreview{}
 	for rows.Next() {
-		var i ListGlobalArticlesRow
+		var i ArticlePreview
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
 			&i.Title,
 			&i.Description,
 			&i.Slug,
@@ -499,14 +428,11 @@ func (q *Queries) ListGlobalArticles(ctx context.Context, arg ListGlobalArticles
 }
 
 const listGlobalArticlesByTag = `-- name: ListGlobalArticlesByTag :many
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-INNER JOIN article_tags at ON at.article_id = a.id
+SELECT p.id, p.user_id, p.title, p.description, p.slug, p.favorites_count, p.created_at, p.author_username, p.author_image FROM article_previews p
+INNER JOIN article_tags at ON at.article_id = p.id
 INNER JOIN tags t ON t.id = at.tag_id
 WHERE t.name = ? COLLATE NOCASE
-ORDER BY a.created_at DESC, a.id DESC
+ORDER BY p.created_at DESC, p.id DESC
 LIMIT ? OFFSET ?
 `
 
@@ -516,28 +442,18 @@ type ListGlobalArticlesByTagParams struct {
 	Offset int64  `json:"offset"`
 }
 
-type ListGlobalArticlesByTagRow struct {
-	ID             int64          `json:"id"`
-	Title          string         `json:"title"`
-	Description    string         `json:"description"`
-	Slug           string         `json:"slug"`
-	FavoritesCount int64          `json:"favorites_count"`
-	CreatedAt      string         `json:"created_at"`
-	AuthorUsername string         `json:"author_username"`
-	AuthorImage    sql.NullString `json:"author_image"`
-}
-
-func (q *Queries) ListGlobalArticlesByTag(ctx context.Context, arg ListGlobalArticlesByTagParams) ([]ListGlobalArticlesByTagRow, error) {
+func (q *Queries) ListGlobalArticlesByTag(ctx context.Context, arg ListGlobalArticlesByTagParams) ([]ArticlePreview, error) {
 	rows, err := q.db.QueryContext(ctx, listGlobalArticlesByTag, arg.Name, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListGlobalArticlesByTagRow{}
+	items := []ArticlePreview{}
 	for rows.Next() {
-		var i ListGlobalArticlesByTagRow
+		var i ArticlePreview
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
 			&i.Title,
 			&i.Description,
 			&i.Slug,

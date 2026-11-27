@@ -26,8 +26,9 @@ INNER JOIN article_tags at ON at.tag_id = t.id
 WHERE at.article_id = ?
 ORDER BY t.name ASC;
 
--- name: ListAllArticleTags :many
+-- name: ListTagsForArticles :many
 SELECT at.article_id, t.name
 FROM tags t
 INNER JOIN article_tags at ON at.tag_id = t.id
+WHERE at.article_id IN (sqlc.slice(article_ids))
 ORDER BY at.article_id, t.name ASC;

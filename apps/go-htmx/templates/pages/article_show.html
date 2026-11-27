@@ -7,7 +7,7 @@
       <h1>{{$a.Title}}</h1>
       <div class="article-meta">
         <a href="/users/{{$a.AuthorUsername}}">
-          <img src="{{defaultImage $a.AuthorImage}}" alt="">
+          <img src="{{defaultImage (nullStr $a.AuthorImage)}}" alt="">
         </a>
         <div class="info">
           <a class="author" href="/users/{{$a.AuthorUsername}}">{{$a.AuthorUsername}}</a>
@@ -38,7 +38,7 @@
       <div class="col-md-12">
         {{markdown $a.Body}}
         <ul class="tag-list">
-          {{range $a.Tags}}
+          {{range $c.Tags}}
             <li class="tag-default tag-pill tag-outline"><a href="/?tag={{.}}">{{.}}</a></li>
           {{end}}
         </ul>
@@ -73,7 +73,7 @@
           </div>
           <div class="card-footer">
             <a href="/users/{{.AuthorUsername}}" class="comment-author">
-              <img src="{{defaultImage .AuthorImage}}" class="comment-author-img" alt="">
+              <img src="{{defaultImage (nullStr .AuthorImage)}}" class="comment-author-img" alt="">
             </a>
             &nbsp;
             <a href="/users/{{.AuthorUsername}}" class="comment-author">{{.AuthorUsername}}</a>

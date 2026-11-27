@@ -1,8 +1,8 @@
 package httpx
 
 import (
+	"bytes"
 	"database/sql"
-	"fmt"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -60,20 +60,6 @@ func NewRenderer(dir string, reload bool) *Renderer {
 			}
 			return ""
 		},
-		"dict": func(values ...any) (map[string]any, error) {
-			if len(values)%2 != 0 {
-				return nil, fmt.Errorf("dict requires even number of args")
-			}
-			m := make(map[string]any, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, fmt.Errorf("dict keys must be strings")
-				}
-				m[key] = values[i+1]
-			}
-			return m, nil
-		},
 	}
 	return r
 }
@@ -115,39 +101,47 @@ type PageData struct {
 	Content any
 }
 
-func (r *Renderer) HTML(w http.ResponseWriter, req *http.Request, name string, title string, content any) {
+// HTML renders a page inside the base layout. Output is buffered so a
+// template error becomes a clean 500 instead of a half-written page.
+func (r *Renderer) HTML(w http.ResponseWriter, req *http.Request, name string, title string, content any) error {
 	t, err := r.load(name)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 	data := PageData{
 		Title:   title,
 		Viewer:  auth.ViewerFrom(req.Context()),
 		CSRF:    auth.CSRFFrom(req.Context()),
+		Flash:   flashFrom(req),
 		Content: content,
 	}
-	if f := flashFrom(req); f != "" {
-		data.Flash = f
+	var buf bytes.Buffer
+	if err := t.ExecuteTemplate(&buf, "base.html", data); err != nil {
+		return err
+	}
+	if data.Flash != "" {
 		ClearFlash(w)
 	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := t.ExecuteTemplate(w, "base.html", data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	return writeHTML(w, &buf)
 }
 
-func (r *Renderer) Partial(w http.ResponseWriter, name string, data any) {
+func (r *Renderer) Partial(w http.ResponseWriter, name string, data any) error {
 	path := filepath.Join(r.dir, "partials", name+".html")
 	t, err := template.New(filepath.Base(path)).Funcs(r.funcs).ParseFiles(path)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
+	var buf bytes.Buffer
+	if err := t.ExecuteTemplate(&buf, name, data); err != nil {
+		return err
+	}
+	return writeHTML(w, &buf)
+}
+
+func writeHTML(w http.ResponseWriter, buf *bytes.Buffer) error {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := t.ExecuteTemplate(w, name, data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	_, err := buf.WriteTo(w)
+	return err
 }
 
 func flashFrom(req *http.Request) string {

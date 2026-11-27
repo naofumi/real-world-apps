@@ -20,6 +20,18 @@ type Article struct {
 	UpdatedAt      string `json:"updated_at"`
 }
 
+type ArticlePreview struct {
+	ID             int64          `json:"id"`
+	UserID         int64          `json:"user_id"`
+	Title          string         `json:"title"`
+	Description    string         `json:"description"`
+	Slug           string         `json:"slug"`
+	FavoritesCount int64          `json:"favorites_count"`
+	CreatedAt      string         `json:"created_at"`
+	AuthorUsername string         `json:"author_username"`
+	AuthorImage    sql.NullString `json:"author_image"`
+}
+
 type ArticleTag struct {
 	ArticleID int64  `json:"article_id"`
 	TagID     int64  `json:"tag_id"`

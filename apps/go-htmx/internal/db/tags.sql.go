@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"strings"
 )
 
 const addArticleTag = `-- name: AddArticleTag :exec
@@ -45,41 +46,6 @@ func (q *Queries) GetOrCreateTag(ctx context.Context, name string) (Tag, error) 
 	var i Tag
 	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
 	return i, err
-}
-
-const listAllArticleTags = `-- name: ListAllArticleTags :many
-SELECT at.article_id, t.name
-FROM tags t
-INNER JOIN article_tags at ON at.tag_id = t.id
-ORDER BY at.article_id, t.name ASC
-`
-
-type ListAllArticleTagsRow struct {
-	ArticleID int64  `json:"article_id"`
-	Name      string `json:"name"`
-}
-
-func (q *Queries) ListAllArticleTags(ctx context.Context) ([]ListAllArticleTagsRow, error) {
-	rows, err := q.db.QueryContext(ctx, listAllArticleTags)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListAllArticleTagsRow{}
-	for rows.Next() {
-		var i ListAllArticleTagsRow
-		if err := rows.Scan(&i.ArticleID, &i.Name); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const listPopularTags = `-- name: ListPopularTags :many
@@ -140,6 +106,52 @@ func (q *Queries) ListTagsForArticle(ctx context.Context, articleID int64) ([]st
 			return nil, err
 		}
 		items = append(items, name)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTagsForArticles = `-- name: ListTagsForArticles :many
+SELECT at.article_id, t.name
+FROM tags t
+INNER JOIN article_tags at ON at.tag_id = t.id
+WHERE at.article_id IN (/*SLICE:article_ids*/?)
+ORDER BY at.article_id, t.name ASC
+`
+
+type ListTagsForArticlesRow struct {
+	ArticleID int64  `json:"article_id"`
+	Name      string `json:"name"`
+}
+
+func (q *Queries) ListTagsForArticles(ctx context.Context, articleIds []int64) ([]ListTagsForArticlesRow, error) {
+	query := listTagsForArticles
+	var queryParams []interface{}
+	if len(articleIds) > 0 {
+		for _, v := range articleIds {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:article_ids*/?", strings.Repeat(",?", len(articleIds))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:article_ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTagsForArticlesRow{}
+	for rows.Next() {
+		var i ListTagsForArticlesRow
+		if err := rows.Scan(&i.ArticleID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

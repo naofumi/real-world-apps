@@ -2,7 +2,7 @@
 <div class="article-preview">
   <div class="article-meta">
     <a href="/users/{{.AuthorUsername}}">
-      <img src="{{defaultImage .AuthorImage}}" alt="">
+      <img src="{{defaultImage (nullStr .AuthorImage)}}" alt="">
     </a>
     <div class="info">
       <a class="author" href="/users/{{.AuthorUsername}}">{{.AuthorUsername}}</a>
