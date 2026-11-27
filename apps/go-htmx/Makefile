@@ -2,7 +2,7 @@ APP_ROOT := $(CURDIR)
 export APP_ROOT
 export PATH := $(shell go env GOPATH)/bin:$(PATH)
 
-.PHONY: sqlc migrate seed run test test-e2e tidy
+.PHONY: sqlc migrate seed run test lint test-e2e tidy
 
 sqlc:
 	sqlc generate
@@ -21,6 +21,10 @@ run:
 
 test:
 	go test ./...
+
+lint:
+	go vet ./...
+	go run github.com/kisielk/errcheck@v1.7.0 -ignore 'database/sql:Close|Rollback,io:Close' ./...
 
 test-e2e:
 	npm test

@@ -63,26 +63,28 @@ func main() {
 	}))
 
 	// stamp created_at for stable ordering in demos
-	_, _ = sqlDB.Exec(`UPDATE articles SET created_at = ?, updated_at = ? WHERE id = ?`, "2026-11-01 10:00:00", "2026-11-01 10:00:00", a1.ID)
-	_, _ = sqlDB.Exec(`UPDATE articles SET created_at = ?, updated_at = ? WHERE id = ?`, "2026-11-02 12:00:00", "2026-11-02 12:00:00", a2.ID)
-	_, _ = sqlDB.Exec(`UPDATE articles SET created_at = ?, updated_at = ? WHERE id = ?`, "2026-11-03 09:30:00", "2026-11-03 09:30:00", a3.ID)
+	mustExec(sqlDB.Exec(`UPDATE articles SET created_at = ?, updated_at = ? WHERE id = ?`, "2026-11-01 10:00:00", "2026-11-01 10:00:00", a1.ID))
+	mustExec(sqlDB.Exec(`UPDATE articles SET created_at = ?, updated_at = ? WHERE id = ?`, "2026-11-02 12:00:00", "2026-11-02 12:00:00", a2.ID))
+	mustExec(sqlDB.Exec(`UPDATE articles SET created_at = ?, updated_at = ? WHERE id = ?`, "2026-11-03 09:30:00", "2026-11-03 09:30:00", a3.ID))
 
 	tagGo := mustTag(q.GetOrCreateTag(ctx, "go"))
 	tagSQLite := mustTag(q.GetOrCreateTag(ctx, "sqlite"))
 	tagDragons := mustTag(q.GetOrCreateTag(ctx, "dragons"))
-	_ = q.AddArticleTag(ctx, db.AddArticleTagParams{ArticleID: a1.ID, TagID: tagGo.ID})
-	_ = q.AddArticleTag(ctx, db.AddArticleTagParams{ArticleID: a1.ID, TagID: tagSQLite.ID})
-	_ = q.AddArticleTag(ctx, db.AddArticleTagParams{ArticleID: a2.ID, TagID: tagDragons.ID})
-	_ = q.AddArticleTag(ctx, db.AddArticleTagParams{ArticleID: a3.ID, TagID: tagGo.ID})
+	must(q.AddArticleTag(ctx, db.AddArticleTagParams{ArticleID: a1.ID, TagID: tagGo.ID}))
+	must(q.AddArticleTag(ctx, db.AddArticleTagParams{ArticleID: a1.ID, TagID: tagSQLite.ID}))
+	must(q.AddArticleTag(ctx, db.AddArticleTagParams{ArticleID: a2.ID, TagID: tagDragons.ID}))
+	must(q.AddArticleTag(ctx, db.AddArticleTagParams{ArticleID: a3.ID, TagID: tagGo.ID}))
 
-	n, _ := q.InsertFavorite(ctx, db.InsertFavoriteParams{UserID: bob.ID, ArticleID: a1.ID})
+	n, err := q.InsertFavorite(ctx, db.InsertFavoriteParams{UserID: bob.ID, ArticleID: a1.ID})
+	must(err)
 	if n > 0 {
-		_ = q.IncrementFavoritesCount(ctx, a1.ID)
+		must(q.IncrementFavoritesCount(ctx, a1.ID))
 	}
-	_ = q.InsertFollow(ctx, db.InsertFollowParams{FollowerID: bob.ID, FollowedID: alice.ID})
-	_, _ = q.CreateComment(ctx, db.CreateCommentParams{
+	must(q.InsertFollow(ctx, db.InsertFollowParams{FollowerID: bob.ID, FollowedID: alice.ID}))
+	_, err = q.CreateComment(ctx, db.CreateCommentParams{
 		ArticleID: a1.ID, UserID: bob.ID, Body: "Nice stack choice.",
 	})
+	must(err)
 
 	log.Printf("seeded %s at %s", cfg.DatabasePath, time.Now().Format(time.RFC3339))
 	_ = cara
@@ -106,6 +108,10 @@ func must(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func mustExec(_ sql.Result, err error) {
+	must(err)
 }
 
 func mustArt(a db.Article, err error) db.Article {
