@@ -65,6 +65,10 @@ func main() {
 
 So handlers import `…/internal/httpx`, sqlc code lives under `…/internal/db`, and so on. The `internal/` directory name is a Go convention: other modules outside this tree are not supposed to import it.
 
+A **package** is a directory of `.go` files that all share one `package` name. The import path is the directory's path, so `internal/httpx` is package `httpx`. Every file in a directory must use the same package name, and each subfolder is a separate package with its own imports. Test files in the same folder can be `package httpx` (they see unexported names) or `package httpx_test` (a separate package that only sees exported names).
+
+Visibility is set by capitalization. `NewServer` and `Server` are exported, so `main` can use them. `withSession` and `writeError` are unexported, so only code in `httpx` can call them.
+
 ### Types, structs, methods
 
 A **struct** is like a plain class/record without inheritance:
@@ -87,6 +91,10 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 ```
 
 `*Server` means “pointer to Server” (callers share one instance; methods can use `s.Q`, `s.R`, …).
+
+There is no list of methods inside `type Server struct`. Methods are declared separately, and they can live in any file in the same package. Here they are spread across `handlers_*.go`, `middleware.go`, `handle.go` and others, all in `package httpx`. Code in other packages can't add methods to `Server`, and you can't add methods to types you don't own, such as `http.Request`. That is why helpers like `isHTMX(r)` are plain functions. To see every method on a type, run `go doc ./internal/httpx Server` or use your editor's outline view.
+
+Go has no `implements` keyword. A type satisfies an interface just by having the right methods. `http.Handler` is the interface with one method, `ServeHTTP(w, r)`, so anything with that method works with `ListenAndServe`.
 
 ### Errors are values
 
