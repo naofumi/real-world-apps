@@ -72,6 +72,33 @@ func (b *browser) register(username string) {
 	b.get("/")
 }
 
+func TestUnknownSessionCookieIsClearedAndTreatedAsGuest(t *testing.T) {
+	srv := testServer(t).Router()
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "conduit_session", Value: "stale"})
+	rec := httptest.NewRecorder()
+	srv.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `href="/login"`) {
+		t.Fatalf("stale session: %d, want guest home page", rec.Code)
+	}
+	if !strings.Contains(rec.Header().Get("Set-Cookie"), "conduit_session=;") {
+		t.Fatalf("stale session cookie not cleared: %q", rec.Header().Values("Set-Cookie"))
+	}
+}
+
+func TestPostWithWrongCSRFIsRejected(t *testing.T) {
+	srv := httptest.NewServer(testServer(t).Router())
+	defer srv.Close()
+
+	b := newBrowser(t, srv)
+	b.register("carol")
+	b.csrf = "forged"
+	if code, _ := b.post("/settings", url.Values{"username": {"carol"}, "email": {"carol@example.com"}}); code != http.StatusForbidden {
+		t.Fatalf("forged CSRF: %d, want 403", code)
+	}
+}
+
 func TestArticleEditingIsValidatedAndOwnerOnly(t *testing.T) {
 	srv := httptest.NewServer(testServer(t).Router())
 	defer srv.Close()
