@@ -228,6 +228,16 @@ Middleware is a function that takes an `http.Handler` and returns a new one — 
 
 The middleware body is only three steps: call `s.withSession`, write an error response if it failed, otherwise call `next`.
 
+**Reading the cookie** (the first line of `withSession`):
+
+```go
+if c, err := r.Cookie(auth.SessionCookie); err == nil && c.Value != "" {
+    // c and err exist only inside this if
+}
+```
+
+`r.Cookie` returns `(*http.Cookie, error)`. A missing cookie gives an error and a nil `c`. Because `&&` short-circuits, `c.Value` is never read when `err` is set, so there is no nil-pointer crash. The `if` statement can declare variables before the condition, and those variables go out of scope at the end of the `if` and its `else` branches. That keeps `c` and `err` from leaking into the rest of the function, which is why later code can reuse the same names.
+
 **`s.withSession(w, r)`** is an ordinary helper method on `Server` that does steps 1–3. It returns `(context.Context, error)`: a context that now carries the viewer and CSRF token, or an error. For a guest it returns a context with just an anonymous CSRF token. Only a missing or expired session counts as “logged out”; a real database error is returned and becomes a 500. It is a separate method so the middleware stays short and each step can `return` early instead of nesting `if` blocks.
 
 **`r.WithContext(ctx)`**: a `*http.Request` is treated as immutable, and its context cannot be changed in place. `WithContext` returns a shallow copy of the request that carries the new context. Passing that copy to `next.ServeHTTP` is how a middleware hands values to everything downstream. Later handlers read them back with `auth.ViewerFrom(r.Context())` and `auth.CSRFFrom(r.Context())`. If you forget to pass the copy on, the handlers never see what the middleware added.
