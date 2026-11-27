@@ -2,120 +2,56 @@ package httpx
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/naofumi/real-world-apps/apps/go-htmx/internal/auth"
 	"github.com/naofumi/real-world-apps/apps/go-htmx/internal/db"
 )
 
-const pageSize = 20
-
-func (s *Server) Home(w http.ResponseWriter, r *http.Request) {
+func (s *Server) Home(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	tag := r.URL.Query().Get("tag")
 	offset := pageOffset(r)
 
 	var (
-		previews []ArticlePreview
-		total    int64
-		err      error
+		rows []db.ArticlePreview
+		err  error
 	)
-	if tag != "" {
-		rows, e := s.Q.ListGlobalArticlesByTag(ctx, db.ListGlobalArticlesByTagParams{
-			Name:   tag,
-			Limit:  pageSize,
-			Offset: int64(offset),
-		})
-		err = e
-		for _, row := range rows {
-			previews = append(previews, previewFromTag(row))
-		}
-		total, _ = s.Q.CountGlobalArticlesByTag(ctx, tag)
+	if tag == "" {
+		rows, err = s.Q.ListGlobalArticles(ctx, db.ListGlobalArticlesParams{Limit: pageSize, Offset: offset})
 	} else {
-		rows, e := s.Q.ListGlobalArticles(ctx, db.ListGlobalArticlesParams{
-			Limit:  pageSize,
-			Offset: int64(offset),
-		})
-		err = e
-		for _, row := range rows {
-			previews = append(previews, previewFromGlobal(row))
-		}
-		total, _ = s.Q.CountGlobalArticles(ctx)
+		rows, err = s.Q.ListGlobalArticlesByTag(ctx, db.ListGlobalArticlesByTagParams{Name: tag, Limit: pageSize, Offset: offset})
 	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
-	previews, err = s.attachTags(ctx, previews)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	csrf := auth.CSRFFrom(ctx)
-	if v := auth.ViewerFrom(ctx); v != nil {
-		previews, _ = s.markFavorited(ctx, v.ID, previews)
-		previews = stampCSRF(previews, csrf)
-	}
-	tags, _ := s.Q.ListPopularTags(ctx, 20)
-	tagNames := make([]string, 0, len(tags))
-	for _, t := range tags {
-		tagNames = append(tagNames, t.Name)
-	}
-	mode := "global"
+
+	view := homeView{Mode: "global", Tag: tag}
 	if tag != "" {
-		mode = "tag"
+		view.Mode = "tag"
 	}
-	s.R.HTML(w, r, "home", "Conduit", map[string]any{
-		"Mode":     mode,
-		"Tag":      tag,
-		"Articles": previews,
-		"Tags":     tagNames,
-		"Total":    total,
-		"CSRF":     csrf,
-	})
+	return s.renderHome(w, r, "Conduit", view, rows)
 }
 
-func (s *Server) Feed(w http.ResponseWriter, r *http.Request) {
+func (s *Server) Feed(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
-	v := auth.ViewerFrom(ctx)
-	offset := pageOffset(r)
 	rows, err := s.Q.ListFeedArticles(ctx, db.ListFeedArticlesParams{
-		FollowerID: v.ID,
+		FollowerID: auth.ViewerFrom(ctx).ID,
 		Limit:      pageSize,
-		Offset:     int64(offset),
+		Offset:     pageOffset(r),
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
-	previews := make([]ArticlePreview, 0, len(rows))
-	for _, row := range rows {
-		previews = append(previews, previewFromFeed(row))
-	}
-	previews, _ = s.attachTags(ctx, previews)
-	previews, _ = s.markFavorited(ctx, v.ID, previews)
-	csrf := auth.CSRFFrom(ctx)
-	previews = stampCSRF(previews, csrf)
-	total, _ := s.Q.CountFeedArticles(ctx, v.ID)
-	tags, _ := s.Q.ListPopularTags(ctx, 20)
-	tagNames := make([]string, 0, len(tags))
-	for _, t := range tags {
-		tagNames = append(tagNames, t.Name)
-	}
-	s.R.HTML(w, r, "home", "Your Feed — Conduit", map[string]any{
-		"Mode":     "feed",
-		"Tag":      "",
-		"Articles": previews,
-		"Tags":     tagNames,
-		"Total":    total,
-		"CSRF":     csrf,
-	})
+	return s.renderHome(w, r, "Your Feed — Conduit", homeView{Mode: "feed"}, rows)
 }
 
-func pageOffset(r *http.Request) int {
-	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
-	if page < 1 {
-		page = 1
+func (s *Server) renderHome(w http.ResponseWriter, r *http.Request, title string, view homeView, rows []db.ArticlePreview) error {
+	var err error
+	if view.Articles, err = s.previews(r.Context(), rows); err != nil {
+		return err
 	}
-	return (page - 1) * pageSize
+	if view.Tags, err = s.popularTags(r.Context()); err != nil {
+		return err
+	}
+	return s.R.HTML(w, r, "home", title, view)
 }

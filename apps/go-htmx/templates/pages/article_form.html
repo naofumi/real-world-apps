@@ -1,6 +1,6 @@
 {{define "content"}}
 {{$c := .Content}}
-{{$a := $c.Article}}
+{{$f := $c.Form}}
 <div class="editor-page">
   <div class="container page">
     <div class="row">
@@ -16,19 +16,19 @@
           <fieldset>
             <fieldset class="form-group">
               <input class="form-control form-control-lg" type="text" name="title"
-                     placeholder="Article Title" value="{{index $a "Title"}}" required>
+                     placeholder="Article Title" value="{{$f.Title}}" required>
             </fieldset>
             <fieldset class="form-group">
               <input class="form-control" type="text" name="description"
-                     placeholder="What's this article about?" value="{{index $a "Description"}}" required>
+                     placeholder="What's this article about?" value="{{$f.Description}}" required>
             </fieldset>
             <fieldset class="form-group">
               <textarea class="form-control" rows="8" name="body"
-                        placeholder="Write your article (in markdown)" required>{{index $a "Body"}}</textarea>
+                        placeholder="Write your article (in markdown)" required>{{$f.Body}}</textarea>
             </fieldset>
             <fieldset class="form-group">
               <input class="form-control" type="text" name="tagList"
-                     placeholder="Enter tags" value="{{$c.Tags}}">
+                     placeholder="Enter tags" value="{{$f.TagList}}">
             </fieldset>
             <button class="btn btn-lg btn-primary pull-xs-right" type="submit">
               {{if $c.IsNew}}Publish Article{{else}}Update Article{{end}}

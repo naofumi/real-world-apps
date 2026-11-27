@@ -2,6 +2,7 @@ package httpx
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -9,154 +10,113 @@ import (
 	"github.com/naofumi/real-world-apps/apps/go-htmx/internal/db"
 )
 
-func (s *Server) LoginForm(w http.ResponseWriter, r *http.Request) {
-	s.R.HTML(w, r, "login", "Sign in — Conduit", map[string]any{
-		"Email": "",
-		"Errors": []string{},
-	})
+const (
+	loginTitle    = "Sign in — Conduit"
+	registerTitle = "Sign up — Conduit"
+	settingsTitle = "Settings — Conduit"
+)
+
+func (s *Server) LoginForm(w http.ResponseWriter, r *http.Request) error {
+	return s.R.HTML(w, r, "login", loginTitle, authView{})
 }
 
-func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
+func (s *Server) Login(w http.ResponseWriter, r *http.Request) error {
 	email := strings.TrimSpace(r.FormValue("email"))
-	password := r.FormValue("password")
 	u, err := s.Q.GetUserByEmail(r.Context(), email)
-	if err != nil || !auth.CheckPassword(u.PasswordHash, password) {
-		s.R.HTML(w, r, "login", "Sign in — Conduit", map[string]any{
-			"Email":  email,
-			"Errors": []string{"email or password is invalid"},
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	if err != nil || !auth.CheckPassword(u.PasswordHash, r.FormValue("password")) {
+		return s.R.HTML(w, r, "login", loginTitle, authView{
+			Email:  email,
+			Errors: []string{"email or password is invalid"},
 		})
-		return
 	}
-	token, _, err := auth.CreateSession(r.Context(), s.Q, u.ID)
-	if err != nil {
-		http.Error(w, "session error", http.StatusInternalServerError)
-		return
-	}
-	auth.SetSessionCookie(w, token)
-	http.SetCookie(w, &http.Cookie{Name: "csrf_anon", Value: "", Path: "/", MaxAge: -1})
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return s.signIn(w, r, u.ID)
 }
 
-func (s *Server) Logout(w http.ResponseWriter, r *http.Request) {
+func (s *Server) Logout(w http.ResponseWriter, r *http.Request) error {
 	if tok := auth.SessionTokenFrom(r.Context()); tok != "" {
-		_ = s.Q.DeleteSession(r.Context(), tok)
+		if err := s.Q.DeleteSession(r.Context(), tok); err != nil {
+			return err
+		}
 	}
 	auth.ClearSessionCookie(w)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return redirect(w, r, "/")
 }
 
-func (s *Server) RegisterForm(w http.ResponseWriter, r *http.Request) {
-	s.R.HTML(w, r, "register", "Sign up — Conduit", map[string]any{
-		"Username": "",
-		"Email":    "",
-		"Errors":   []string{},
-	})
+func (s *Server) RegisterForm(w http.ResponseWriter, r *http.Request) error {
+	return s.R.HTML(w, r, "register", registerTitle, authView{})
 }
 
-func (s *Server) Register(w http.ResponseWriter, r *http.Request) {
-	username := strings.TrimSpace(r.FormValue("username"))
-	email := strings.TrimSpace(r.FormValue("email"))
-	password := r.FormValue("password")
-	var errs []string
-	if username == "" {
-		errs = append(errs, "username can't be blank")
+func (s *Server) Register(w http.ResponseWriter, r *http.Request) error {
+	f := parseRegisterForm(r)
+	rerender := func(errs ...string) error {
+		return s.R.HTML(w, r, "register", registerTitle, authView{Username: f.Username, Email: f.Email, Errors: errs})
 	}
-	if email == "" {
-		errs = append(errs, "email can't be blank")
+	if errs := f.errors(); len(errs) > 0 {
+		return rerender(errs...)
 	}
-	if len(password) < 8 {
-		errs = append(errs, "password is too short (minimum is 8 characters)")
-	}
-	if len(errs) > 0 {
-		s.R.HTML(w, r, "register", "Sign up — Conduit", map[string]any{
-			"Username": username, "Email": email, "Errors": errs,
-		})
-		return
-	}
-	hash, err := auth.HashPassword(password)
+	hash, err := auth.HashPassword(f.Password)
 	if err != nil {
-		http.Error(w, "hash error", http.StatusInternalServerError)
-		return
+		return err
 	}
 	u, err := s.Q.CreateUser(r.Context(), db.CreateUserParams{
-		Email:        email,
-		Username:     username,
+		Email:        f.Email,
+		Username:     f.Username,
 		PasswordHash: hash,
-		Bio:          sql.NullString{},
-		Image:        sql.NullString{},
 	})
-	if err != nil {
-		s.R.HTML(w, r, "register", "Sign up — Conduit", map[string]any{
-			"Username": username, "Email": email,
-			"Errors": []string{"email or username is already taken"},
-		})
-		return
+	if isUniqueViolation(err) {
+		return rerender("email or username is already taken")
 	}
-	token, _, err := auth.CreateSession(r.Context(), s.Q, u.ID)
 	if err != nil {
-		http.Error(w, "session error", http.StatusInternalServerError)
-		return
+		return err
 	}
-	auth.SetSessionCookie(w, token)
-	http.SetCookie(w, &http.Cookie{Name: "csrf_anon", Value: "", Path: "/", MaxAge: -1})
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return s.signIn(w, r, u.ID)
 }
 
-func (s *Server) SettingsForm(w http.ResponseWriter, r *http.Request) {
-	v := auth.ViewerFrom(r.Context())
-	u, err := s.Q.GetUserByID(r.Context(), v.ID)
+func (s *Server) SettingsForm(w http.ResponseWriter, r *http.Request) error {
+	u, err := s.Q.GetUserByID(r.Context(), auth.ViewerFrom(r.Context()).ID)
 	if err != nil {
-		http.Error(w, "not found", http.StatusNotFound)
-		return
+		return orNotFound(err, "user")
 	}
-	s.R.HTML(w, r, "settings", "Settings — Conduit", map[string]any{
-		"User":   u,
-		"Errors": []string{},
-	})
+	return s.R.HTML(w, r, "settings", settingsTitle, settingsView{User: u})
 }
 
-func (s *Server) SettingsUpdate(w http.ResponseWriter, r *http.Request) {
-	v := auth.ViewerFrom(r.Context())
-	u, err := s.Q.GetUserByID(r.Context(), v.ID)
+func (s *Server) SettingsUpdate(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	u, err := s.Q.GetUserByID(ctx, auth.ViewerFrom(ctx).ID)
 	if err != nil {
-		http.Error(w, "not found", http.StatusNotFound)
-		return
+		return orNotFound(err, "user")
 	}
-	email := strings.TrimSpace(r.FormValue("email"))
-	username := strings.TrimSpace(r.FormValue("username"))
-	bio := strings.TrimSpace(r.FormValue("bio"))
-	image := strings.TrimSpace(r.FormValue("image"))
-	password := r.FormValue("password")
+	f := parseSettingsForm(r)
+	rerender := func(errs ...string) error {
+		return s.R.HTML(w, r, "settings", settingsTitle, settingsView{User: u, Errors: errs})
+	}
+	if errs := f.errors(); len(errs) > 0 {
+		return rerender(errs...)
+	}
+
 	hash := u.PasswordHash
-	if password != "" {
-		if len(password) < 8 {
-			s.R.HTML(w, r, "settings", "Settings — Conduit", map[string]any{
-				"User": u, "Errors": []string{"password is too short (minimum is 8 characters)"},
-			})
-			return
+	if f.Password != "" {
+		if hash, err = auth.HashPassword(f.Password); err != nil {
+			return err
 		}
-		h, err := auth.HashPassword(password)
-		if err != nil {
-			http.Error(w, "hash error", http.StatusInternalServerError)
-			return
-		}
-		hash = h
 	}
-	updated, err := s.Q.UpdateUser(r.Context(), db.UpdateUserParams{
-		Email:        email,
-		Username:     username,
+	_, err = s.Q.UpdateUser(ctx, db.UpdateUserParams{
+		Email:        f.Email,
+		Username:     f.Username,
 		PasswordHash: hash,
-		Bio:          sql.NullString{String: bio, Valid: true},
-		Image:        sql.NullString{String: image, Valid: image != ""},
+		Bio:          sql.NullString{String: f.Bio, Valid: true},
+		Image:        sql.NullString{String: f.Image, Valid: f.Image != ""},
 		ID:           u.ID,
 	})
-	if err != nil {
-		s.R.HTML(w, r, "settings", "Settings — Conduit", map[string]any{
-			"User": u, "Errors": []string{"could not update settings"},
-		})
-		return
+	if isUniqueViolation(err) {
+		return rerender("email or username is already taken")
 	}
-	_ = updated
+	if err != nil {
+		return err
+	}
 	SetFlash(w, "Settings updated.")
-	http.Redirect(w, r, "/settings", http.StatusSeeOther)
+	return redirect(w, r, "/settings")
 }

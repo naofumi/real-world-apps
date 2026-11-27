@@ -1,65 +1,34 @@
 -- name: ListGlobalArticles :many
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-ORDER BY a.created_at DESC, a.id DESC
+SELECT p.* FROM article_previews p
+ORDER BY p.created_at DESC, p.id DESC
 LIMIT ? OFFSET ?;
 
 -- name: ListGlobalArticlesByTag :many
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-INNER JOIN article_tags at ON at.article_id = a.id
+SELECT p.* FROM article_previews p
+INNER JOIN article_tags at ON at.article_id = p.id
 INNER JOIN tags t ON t.id = at.tag_id
 WHERE t.name = ? COLLATE NOCASE
-ORDER BY a.created_at DESC, a.id DESC
+ORDER BY p.created_at DESC, p.id DESC
 LIMIT ? OFFSET ?;
-
--- name: CountGlobalArticles :one
-SELECT COUNT(*) FROM articles;
-
--- name: CountGlobalArticlesByTag :one
-SELECT COUNT(*)
-FROM articles a
-INNER JOIN article_tags at ON at.article_id = a.id
-INNER JOIN tags t ON t.id = at.tag_id
-WHERE t.name = ? COLLATE NOCASE;
 
 -- name: ListFeedArticles :many
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-INNER JOIN follows f ON f.followed_id = a.user_id
+SELECT p.* FROM article_previews p
+INNER JOIN follows f ON f.followed_id = p.user_id
 WHERE f.follower_id = ?
-ORDER BY a.created_at DESC, a.id DESC
+ORDER BY p.created_at DESC, p.id DESC
 LIMIT ? OFFSET ?;
 
--- name: CountFeedArticles :one
-SELECT COUNT(*)
-FROM articles a
-INNER JOIN follows f ON f.followed_id = a.user_id
-WHERE f.follower_id = ?;
-
 -- name: ListArticlesByAuthor :many
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-WHERE a.user_id = ?
-ORDER BY a.created_at DESC, a.id DESC
+SELECT p.* FROM article_previews p
+WHERE p.user_id = ?
+ORDER BY p.created_at DESC, p.id DESC
 LIMIT ? OFFSET ?;
 
 -- name: ListArticlesFavoritedBy :many
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-INNER JOIN favorites fav ON fav.article_id = a.id
+SELECT p.* FROM article_previews p
+INNER JOIN favorites fav ON fav.article_id = p.id
 WHERE fav.user_id = ?
-ORDER BY fav.created_at DESC, a.id DESC
+ORDER BY fav.created_at DESC, p.id DESC
 LIMIT ? OFFSET ?;
 
 -- name: GetArticleBySlug :one
@@ -105,9 +74,9 @@ UPDATE articles SET favorites_count = favorites_count + 1 WHERE id = ?;
 -- name: DecrementFavoritesCount :exec
 UPDATE articles SET favorites_count = CASE WHEN favorites_count > 0 THEN favorites_count - 1 ELSE 0 END WHERE id = ?;
 
--- name: GetArticlePreviewByID :one
-SELECT a.id, a.title, a.description, a.slug, a.favorites_count, a.created_at,
-       u.username AS author_username, u.image AS author_image
-FROM articles a
-INNER JOIN users u ON u.id = a.user_id
-WHERE a.id = ?;
+-- name: GetArticleSlugByID :one
+SELECT slug FROM articles WHERE id = ?;
+
+-- name: ListFavoritedArticleIDs :many
+SELECT article_id FROM favorites
+WHERE user_id = sqlc.arg(user_id) AND article_id IN (sqlc.slice(article_ids));
