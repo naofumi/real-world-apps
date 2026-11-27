@@ -75,6 +75,14 @@ Scope works in layers:
 - **File scope (one file):** `import` lines belong to the file that contains them. If `handle.go` imports `log`, `middleware.go` still needs its own `import "log"` to use `log.Printf`.
 - **Build selection:** file names and `//go:build` lines decide whether a file is compiled at all. `_test.go` files are only compiled for `go test`.
 
+**Cohesion in Go.** A package is the unit of encapsulation, not a type. Unexported names are shared by every file in the package, so nothing stops one part of `httpx` from reaching into another. Go doesn't enforce cohesion inside a package; you enforce it with package boundaries:
+
+- Keep the exported surface small. Only capitalized names cross the boundary, so they are the package's real API. `auth` is a package like this: it exports `Viewer`, `CreateSession` and a few helpers, and `httpx` can't reach past them.
+- Import cycles are a compile error, which forces dependencies to point one way. That is a built-in cohesion check.
+- When a package grows, split by responsibility. `httpx` is now the largest package in the app, about 50 methods on `Server` across nine files. It works because the methods share one struct and one set of dependencies, but it is the place to split first if it stops being cohesive.
+
+Coming from OOP, the instinct is to make many small classes. In Go the closer habit is many small packages with few exports, and a larger package is acceptable when its contents all serve one job.
+
 ### Types, structs, methods
 
 A **struct** is like a plain class/record without inheritance:
