@@ -151,6 +151,8 @@ e2e/                 → Playwright
 
 `ListenAndServe` is the stdlib HTTP server. The second argument is any `http.Handler` — chi’s router implements that interface.
 
+**`defer sqlDB.Close()`:** `defer` schedules a call to run when the surrounding function returns, so the database connection is closed when `main` exits. Deferred calls run in last-in, first-out order. Here `Close` is only reached if `ListenAndServe` returns; `log.Fatal` exits the process immediately and skips deferred calls, and the OS closes the file anyway. The `defer` is there for tidiness and for any cleanup you add later.
+
 ---
 
 ## 6. chi + `net/http` (the “framework”)
