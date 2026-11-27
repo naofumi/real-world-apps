@@ -69,6 +69,12 @@ A **package** is a directory of `.go` files that all share one `package` name. T
 
 Visibility is set by capitalization. `NewServer` and `Server` are exported, so `main` can use them. `withSession` and `writeError` are unexported, so only code in `httpx` can call them.
 
+Scope works in layers:
+
+- **Package scope (the whole directory):** every top-level name declared in any file of `httpx` is visible in every other file of `httpx`. `middleware.go` uses `Server` without importing anything, because `server.go` declares it.
+- **File scope (one file):** `import` lines belong to the file that contains them. If `handle.go` imports `log`, `middleware.go` still needs its own `import "log"` to use `log.Printf`.
+- **Build selection:** file names and `//go:build` lines decide whether a file is compiled at all. `_test.go` files are only compiled for `go test`.
+
 ### Types, structs, methods
 
 A **struct** is like a plain class/record without inheritance:
