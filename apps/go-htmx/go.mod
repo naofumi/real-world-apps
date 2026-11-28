@@ -1,9 +1,9 @@
 module github.com/naofumi/real-world-apps/apps/go-htmx
 
-go 1.22.2
+go 1.24
 
 require (
-	github.com/go-chi/chi/v5 v5.1.0
+	github.com/go-chi/chi/v5 v5.5.0
 	github.com/pressly/goose/v3 v3.22.1
 	github.com/yuin/goldmark v1.7.4
 	golang.org/x/crypto v0.27.0
