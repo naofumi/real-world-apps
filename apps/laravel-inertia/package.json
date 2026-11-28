@@ -8,7 +8,7 @@
         "test:e2e": "playwright test"
     },
     "devDependencies": {
-        "@inertiajs/react": "^2.0.0",
+        "@inertiajs/react": "^3.11.0",
         "@playwright/test": "^1.65.1",
         "@vitejs/plugin-react": "^5.2.0",
         "concurrently": "^10.0.3",
