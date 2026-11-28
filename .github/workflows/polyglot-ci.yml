@@ -30,8 +30,8 @@ jobs:
       - run: composer install --no-interaction --prefer-dist
       - run: cp .env.example .env && php artisan key:generate --force
       - run: npm ci
-      - run: composer test
       - run: npm run build
+      - run: composer test
 
   php:
     name: PHP unit tests
