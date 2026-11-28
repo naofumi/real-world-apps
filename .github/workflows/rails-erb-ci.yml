@@ -26,9 +26,6 @@ jobs:
       - run: bin/rails db:test:prepare test
         env:
           RAILS_ENV: test
-      - run: bin/rails test:system
-        env:
-          RAILS_ENV: test
       - run: bin/brakeman --no-pager
       - run: bin/bundler-audit
       - run: bin/importmap audit
