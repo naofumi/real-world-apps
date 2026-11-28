@@ -2,9 +2,6 @@ name: go-htmx CI
 
 on:
   pull_request:
-    paths:
-      - "apps/go-htmx/**"
-      - ".github/workflows/go-htmx-ci.yml"
   push:
     branches: [ main ]
     paths:
@@ -61,7 +58,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: apps/go-htmx/package-lock.json
 
