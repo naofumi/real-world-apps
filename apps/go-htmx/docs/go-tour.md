@@ -65,6 +65,24 @@ func main() {
 
 So handlers import `…/internal/httpx`, sqlc code lives under `…/internal/db`, and so on. The `internal/` directory name is a Go convention: other modules outside this tree are not supposed to import it.
 
+A **package** is a directory of `.go` files that all share one `package` name. The import path is the directory's path, so `internal/httpx` is package `httpx`. Every file in a directory must use the same package name, and each subfolder is a separate package with its own imports. Test files in the same folder can be `package httpx` (they see unexported names) or `package httpx_test` (a separate package that only sees exported names).
+
+Visibility is set by capitalization. `NewServer` and `Server` are exported, so `main` can use them. `withSession` and `writeError` are unexported, so only code in `httpx` can call them.
+
+Scope works in layers:
+
+- **Package scope (the whole directory):** every top-level name declared in any file of `httpx` is visible in every other file of `httpx`. `middleware.go` uses `Server` without importing anything, because `server.go` declares it.
+- **File scope (one file):** `import` lines belong to the file that contains them. If `handle.go` imports `log`, `middleware.go` still needs its own `import "log"` to use `log.Printf`.
+- **Build selection:** file names and `//go:build` lines decide whether a file is compiled at all. `_test.go` files are only compiled for `go test`.
+
+**Cohesion in Go.** A package is the unit of encapsulation, not a type. Unexported names are shared by every file in the package, so nothing stops one part of `httpx` from reaching into another. Go doesn't enforce cohesion inside a package; you enforce it with package boundaries:
+
+- Keep the exported surface small. Only capitalized names cross the boundary, so they are the package's real API. `auth` is a package like this: it exports `Viewer`, `CreateSession` and a few helpers, and `httpx` can't reach past them.
+- Import cycles are a compile error, which forces dependencies to point one way. That is a built-in cohesion check.
+- When a package grows, split by responsibility. `httpx` is now the largest package in the app, about 50 methods on `Server` across nine files. It works because the methods share one struct and one set of dependencies, but it is the place to split first if it stops being cohesive.
+
+Coming from OOP, the instinct is to make many small classes. In Go the closer habit is many small packages with few exports, and a larger package is acceptable when its contents all serve one job.
+
 ### Types, structs, methods
 
 A **struct** is like a plain class/record without inheritance:
@@ -87,6 +105,10 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 ```
 
 `*Server` means “pointer to Server” (callers share one instance; methods can use `s.Q`, `s.R`, …).
+
+There is no list of methods inside `type Server struct`. Methods are declared separately, and they can live in any file in the same package. Here they are spread across `handlers_*.go`, `middleware.go`, `handle.go` and others, all in `package httpx`. Code in other packages can't add methods to `Server`, and you can't add methods to types you don't own, such as `http.Request`. That is why helpers like `isHTMX(r)` are plain functions. To see every method on a type, run `go doc ./internal/httpx Server` or use your editor's outline view.
+
+Go has no `implements` keyword. A type satisfies an interface just by having the right methods. `http.Handler` is the interface with one method, `ServeHTTP(w, r)`, so anything with that method works with `ListenAndServe`.
 
 ### Errors are values
 
@@ -151,6 +173,8 @@ e2e/                 → Playwright
 
 `ListenAndServe` is the stdlib HTTP server. The second argument is any `http.Handler` — chi’s router implements that interface.
 
+**`defer sqlDB.Close()`:** `defer` schedules a call to run when the surrounding function returns, so the database connection is closed when `main` exits. Deferred calls run in last-in, first-out order. Here `Close` is only reached if `ListenAndServe` returns; `log.Fatal` exits the process immediately and skips deferred calls, and the OS closes the file anyway. The `defer` is there for tidiness and for any cleanup you add later.
+
 ---
 
 ## 6. chi + `net/http` (the “framework”)
@@ -201,6 +225,34 @@ Middleware is a function that takes an `http.Handler` and returns a new one — 
 2. Look up session + user via sqlc.
 3. Put `Viewer` + CSRF on `r.Context()`.
 4. Call `next.ServeHTTP(w, r.WithContext(ctx))`.
+
+The middleware body is only three steps: call `s.withSession`, write an error response if it failed, otherwise call `next`.
+
+**Reading the cookie** (the first line of `withSession`):
+
+```go
+if c, err := r.Cookie(auth.SessionCookie); err == nil && c.Value != "" {
+    // c and err exist only inside this if
+}
+```
+
+`r.Cookie` returns `(*http.Cookie, error)`. A missing cookie gives an error and a nil `c`. Because `&&` short-circuits, `c.Value` is never read when `err` is set, so there is no nil-pointer crash. The `if` statement can declare variables before the condition, and those variables go out of scope at the end of the `if` and its `else` branches. That keeps `c` and `err` from leaking into the rest of the function, which is why later code can reuse the same names.
+
+**`s.withSession(w, r)`** is an ordinary helper method on `Server` that does steps 1–3. It returns `(context.Context, error)`: a context that now carries the viewer and CSRF token, or an error. For a guest it returns a context with just an anonymous CSRF token. Only a missing or expired session counts as “logged out”; a real database error is returned and becomes a 500. It is a separate method so the middleware stays short and each step can `return` early instead of nesting `if` blocks.
+
+**`r.WithContext(ctx)`**: a `*http.Request` is treated as immutable, and its context cannot be changed in place. `WithContext` returns a shallow copy of the request that carries the new context. Passing that copy to `next.ServeHTTP` is how a middleware hands values to everything downstream. Later handlers read them back with `auth.ViewerFrom(r.Context())` and `auth.CSRFFrom(r.Context())`. If you forget to pass the copy on, the handlers never see what the middleware added.
+
+Contexts are also immutable. `auth.WithViewer(ctx, v)` wraps `ctx` in a new context that holds `v` and returns it. That is why the code keeps reassigning `ctx = auth.WithX(ctx, …)`.
+
+Neither `withSession` nor `WithContext` changes the original request. `withSession` starts from `r.Context()` and returns a new context; `r.WithContext(ctx)` returns a new request. The original `r` keeps its old context. Each `WithX` layer wraps the previous context like a linked list, so everything already there (cancellation, chi's route params) is preserved. For a logged-in request:
+
+```text
+r.Context()                       chi/server context
+  + viewer, session token, CSRF   added by withSession  →  ctx
+r2 := r.WithContext(ctx)          copy of r that carries ctx
+next.ServeHTTP(w, r2)             handlers get r2
+auth.ViewerFrom(r2.Context())     finds the viewer by walking the layers
+```
 
 [`RequireLogin`](../internal/httpx/middleware.go) redirects to `/login` if there is no viewer.
 

@@ -58,19 +58,31 @@ func (q *Queries) DeleteSession(ctx context.Context, token string) error {
 	return err
 }
 
-const getSessionByToken = `-- name: GetSessionByToken :one
-SELECT token, user_id, csrf_token, created_at, expires_at FROM sessions WHERE token = ? AND expires_at > datetime('now')
+const getSessionUser = `-- name: GetSessionUser :one
+SELECT users.id, users.email, users.username, users.password_hash, users.bio, users.image, users.created_at, users.updated_at, sessions.csrf_token
+FROM sessions
+INNER JOIN users ON users.id = sessions.user_id
+WHERE sessions.token = ? AND sessions.expires_at > datetime('now')
 `
 
-func (q *Queries) GetSessionByToken(ctx context.Context, token string) (Session, error) {
-	row := q.db.QueryRowContext(ctx, getSessionByToken, token)
-	var i Session
+type GetSessionUserRow struct {
+	User      User   `json:"user"`
+	CsrfToken string `json:"csrf_token"`
+}
+
+func (q *Queries) GetSessionUser(ctx context.Context, token string) (GetSessionUserRow, error) {
+	row := q.db.QueryRowContext(ctx, getSessionUser, token)
+	var i GetSessionUserRow
 	err := row.Scan(
-		&i.Token,
-		&i.UserID,
+		&i.User.ID,
+		&i.User.Email,
+		&i.User.Username,
+		&i.User.PasswordHash,
+		&i.User.Bio,
+		&i.User.Image,
+		&i.User.CreatedAt,
+		&i.User.UpdatedAt,
 		&i.CsrfToken,
-		&i.CreatedAt,
-		&i.ExpiresAt,
 	)
 	return i, err
 }

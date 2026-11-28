@@ -49,18 +49,20 @@ func isUniqueViolation(err error) bool {
 
 func (s *Server) h(fn handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := fn(w, r)
-		if err == nil {
-			return
+		if err := fn(w, r); err != nil {
+			s.writeError(w, r, err)
 		}
-		var he *httpError
-		if errors.As(err, &he) {
-			http.Error(w, he.msg, he.status)
-			return
-		}
-		log.Printf("%s %s: %v", r.Method, r.URL.Path, err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
 	}
+}
+
+func (s *Server) writeError(w http.ResponseWriter, r *http.Request, err error) {
+	var he *httpError
+	if errors.As(err, &he) {
+		http.Error(w, he.msg, he.status)
+		return
+	}
+	log.Printf("%s %s: %v", r.Method, r.URL.Path, err)
+	http.Error(w, "internal server error", http.StatusInternalServerError)
 }
 
 func (s *Server) inTx(ctx context.Context, fn func(q *db.Queries) error) error {
@@ -92,6 +94,6 @@ func (s *Server) signIn(w http.ResponseWriter, r *http.Request, userID int64) er
 		return err
 	}
 	auth.SetSessionCookie(w, token)
-	http.SetCookie(w, &http.Cookie{Name: "csrf_anon", Value: "", Path: "/", MaxAge: -1})
+	http.SetCookie(w, &http.Cookie{Name: anonCSRFCookie, Value: "", Path: "/", MaxAge: -1})
 	return redirect(w, r, "/")
 }
