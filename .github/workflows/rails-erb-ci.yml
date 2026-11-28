@@ -1,0 +1,32 @@
+name: Rails ERB CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Rails ERB test and security checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/rails-erb
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@v1
+        with:
+          working-directory: apps/rails-erb
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips
+      - run: bin/rails db:test:prepare test
+        env:
+          RAILS_ENV: test
+      - run: bin/brakeman --no-pager
+      - run: bin/bundler-audit
+      - run: bin/importmap audit
+      - run: bin/rubocop -f github

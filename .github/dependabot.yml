@@ -1,0 +1,42 @@
+version: 2
+updates:
+  - package-ecosystem: "bundler"
+    directory: "/apps/rails-erb"
+    schedule:
+      interval: weekly
+  - package-ecosystem: "docker"
+    directory: "/apps/rails-erb"
+    schedule:
+      interval: weekly
+  - package-ecosystem: "gomod"
+    directory: "/apps/go-htmx"
+    schedule:
+      interval: weekly
+  - package-ecosystem: "npm"
+    directory: "/apps/go-htmx"
+    schedule:
+      interval: weekly
+  - package-ecosystem: "composer"
+    directory: "/apps/laravel-inertia"
+    schedule:
+      interval: weekly
+  - package-ecosystem: "npm"
+    directory: "/apps/laravel-inertia"
+    schedule:
+      interval: weekly
+  - package-ecosystem: "composer"
+    directory: "/apps/php"
+    schedule:
+      interval: weekly
+  - package-ecosystem: "npm"
+    directory: "/apps/php"
+    schedule:
+      interval: weekly
+  - package-ecosystem: "npm"
+    directory: "/apps/react-hono"
+    schedule:
+      interval: weekly
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: weekly
