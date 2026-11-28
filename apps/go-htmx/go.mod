@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/go-chi/chi/v5 v5.5.0
 	github.com/pressly/goose/v3 v3.30.1
-	github.com/yuin/goldmark v1.7.4
+	github.com/yuin/goldmark v1.8.7
 	golang.org/x/crypto v0.59.0
 	modernc.org/sqlite v1.63.0
 )
